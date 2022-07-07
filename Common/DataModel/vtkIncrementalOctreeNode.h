@@ -60,7 +60,6 @@
 #define vtkIncrementalOctreeNode_h
 
 #include "vtkCommonDataModelModule.h" // For export macro
-#include "vtkDeprecation.h"           // For VTK_DEPRECATED_IN_9_1_0
 #include "vtkObject.h"
 
 class vtkPoints;
@@ -182,12 +181,9 @@ public:
    * returns 1 to indicate the success of point insertion.
    * numberOfNodes is the number of nodes present in the tree at this time.
    * it is used to assign an ID to each node which can be used to associate
-   * application specifc information with each node. It is updated if new nodes
+   * application specific information with each node. It is updated if new nodes
    * are added to the tree.
    */
-  VTK_DEPRECATED_IN_9_1_0("Use the version with numberOfNodes parameter instead.")
-  int InsertPoint(
-    vtkPoints* points, const double newPnt[3], int maxPts, vtkIdType* pntId, int ptMode);
   int InsertPoint(vtkPoints* points, const double newPnt[3], int maxPts, vtkIdType* pntId,
     int ptMode, int& numberOfNodes);
   //@}

@@ -25,17 +25,20 @@
 #include "vtkUnstructuredGridBase.h"
 
 #define Compare(output, expected)                                                                  \
-  if (output->GetNumberOfCells() != expected)                                                      \
+  do                                                                                               \
   {                                                                                                \
-    cerr << "Test " << __FUNCTION__ << " expected " << expected << " cells, got "                  \
-         << output->GetNumberOfCells() << endl;                                                    \
-    return false;                                                                                  \
-  }                                                                                                \
-  else                                                                                             \
-  {                                                                                                \
-    cout << "Test " << __FUNCTION__ << " succeeded with " << output->GetNumberOfCells()            \
-         << " cells." << endl;                                                                     \
-  }
+    if (output->GetNumberOfCells() != expected)                                                    \
+    {                                                                                              \
+      cerr << "Test " << __FUNCTION__ << " expected " << expected << " cells, got "                \
+           << output->GetNumberOfCells() << endl;                                                  \
+      return false;                                                                                \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+      cout << "Test " << __FUNCTION__ << " succeeded with " << output->GetNumberOfCells()          \
+           << " cells." << endl;                                                                   \
+    }                                                                                              \
+  } while (false)
 
 bool TestPlaneCutterStructured(int type, int expected)
 {
@@ -164,10 +167,9 @@ bool TestPlaneCutterUnstructured(int expected)
 
 int TestPlaneCutter(int, char*[])
 {
-  int expected[] = { 7, 4 };
   for (int type = 0; type < 2; type++)
   {
-    if (!TestPlaneCutterStructured(type, expected[type]))
+    if (!TestPlaneCutterStructured(type, 4))
     {
       cerr << "Cutting Structured failed" << endl;
       return EXIT_FAILURE;

@@ -244,7 +244,7 @@ bool vtkSQLiteDatabase::IsSupported(int feature)
       vtkErrorMacro(<< "Unknown SQL feature code " << feature << "!  See "
                     << "vtkSQLDatabase.h for a list of possible features.");
       return false;
-    };
+    }
   }
 }
 
@@ -454,7 +454,7 @@ bool vtkSQLiteDatabase::ParseURL(const char* URL)
 
   if (!vtksys::SystemTools::ParseURLProtocol(urlstr, protocol, dataglom))
   {
-    vtkErrorMacro("Invalid URL: \"" << urlstr.c_str() << "\"");
+    vtkErrorMacro("Invalid URL: \"" << urlstr << "\"");
     return false;
   }
 

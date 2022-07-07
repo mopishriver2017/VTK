@@ -13,9 +13,6 @@
 
 =========================================================================*/
 
-// Hide VTK_DEPRECATED_IN_9_1_0() warning for this class
-#define VTK_DEPRECATION_LEVEL 0
-
 #include "vtkGenerateGlobalIds.h"
 
 #include "vtkBoundingBox.h"
@@ -173,7 +170,7 @@ static bool GenerateIds(vtkDataObject* dobj, vtkGenerateGlobalIds* self, bool ce
     }
     else
     {
-      // now dequeue owership information and process locally to assign ids
+      // now dequeue ownership information and process locally to assign ids
       // to locally owned points and flag ghost points.
       b->DequeueOwnershipInformation(rp);
     }
@@ -347,7 +344,7 @@ struct PointTT
     locator->SetDataSet(grid);
     locator->SetTolerance(tolerance);
     locator->BuildLocator();
-    locator->MergePoints(tolerance, &mergemap[0]);
+    locator->MergePoints(tolerance, mergemap.data());
     return mergemap;
   }
 };

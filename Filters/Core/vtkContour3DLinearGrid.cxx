@@ -73,27 +73,33 @@ vtkCxxSetObjectMacro(vtkContour3DLinearGrid, ScalarTree, vtkScalarTree);
 // parallel processing mode. The _REDUCE_ version is used to called functors
 // with a Reduce() method).
 #define EXECUTE_SMPFOR(_seq, _num, _op)                                                            \
-  if (!_seq)                                                                                       \
+  do                                                                                               \
   {                                                                                                \
-    vtkSMPTools::For(0, _num, _op);                                                                \
-  }                                                                                                \
-  else                                                                                             \
-  {                                                                                                \
-    _op(0, _num);                                                                                  \
-  }
+    if (!_seq)                                                                                     \
+    {                                                                                              \
+      vtkSMPTools::For(0, _num, _op);                                                              \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+      _op(0, _num);                                                                                \
+    }                                                                                              \
+  } while (false)
 
 #define EXECUTE_REDUCED_SMPFOR(_seq, _num, _op, _nt)                                               \
-  if (!_seq)                                                                                       \
+  do                                                                                               \
   {                                                                                                \
-    vtkSMPTools::For(0, _num, _op);                                                                \
-  }                                                                                                \
-  else                                                                                             \
-  {                                                                                                \
-    _op.Initialize();                                                                              \
-    _op(0, _num);                                                                                  \
-    _op.Reduce();                                                                                  \
-  }                                                                                                \
-  _nt = _op.NumThreadsUsed;
+    if (!_seq)                                                                                     \
+    {                                                                                              \
+      vtkSMPTools::For(0, _num, _op);                                                              \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+      _op.Initialize();                                                                            \
+      _op(0, _num);                                                                                \
+      _op.Reduce();                                                                                \
+    }                                                                                              \
+    _nt = _op.NumThreadsUsed;                                                                      \
+  } while (false)
 
 namespace
 {
@@ -272,11 +278,11 @@ struct ContourCellsBase
     // Copy points output to VTK structures. Only point coordinates are
     // copied for now; later we'll define the triangle topology.
     ProducePoints<TOP> producePts(&localPts, &localPtOffsets, pts);
-    EXECUTE_SMPFOR(this->Sequential, this->NumThreadsUsed, producePts)
+    EXECUTE_SMPFOR(this->Sequential, this->NumThreadsUsed, producePts);
 
     // Now produce the output triangles (topology) for this contour n parallel
     ProduceTriangles produceTris(this->TotalTris, this->NewPolys);
-    EXECUTE_SMPFOR(this->Sequential, this->NumTris, produceTris)
+    EXECUTE_SMPFOR(this->Sequential, this->NumTris, produceTris);
   } // Reduce
 };  // ContourCellsBase
 
@@ -787,7 +793,7 @@ struct ProduceMergedTriangles
 
   void Initialize()
   {
-    ; // without this method Reduce() is not called
+    // without this method Reduce() is not called
   }
 
   struct Impl
@@ -942,7 +948,7 @@ struct ProduceAttributes
       mergeEdges = extractEdges.Edges;                                                             \
     }                                                                                              \
   }                                                                                                \
-  break;
+  break
 
 // Wrapper to handle multiple template types for merged processing
 template <typename TIds>
@@ -965,7 +971,7 @@ int ProcessMerged(vtkIdType numCells, vtkPoints* inPts, CellIter* cellIter, int 
     default:
       vtkGenericWarningMacro(<< "Scalar type not supported");
       return 0;
-  };
+  }
   int nt = numThreads;
 
   // Make sure data was produced
@@ -1258,7 +1264,7 @@ vtkMTimeType vtkContour3DLinearGrid::GetMTime()
   case VTK_SCALAR_type:                                                                            \
     ProcessFastPath<_type>(numCells, inPts, cellIter, (_type*)sPtr, value, stree, outPts,          \
       newPolys, this->SequentialProcessing, this->NumberOfThreadsUsed, totalPts, totalTris);       \
-    break;
+    break
 
 //------------------------------------------------------------------------------
 // Specialized contouring filter to handle unstructured grids with 3D linear
@@ -1372,7 +1378,7 @@ void vtkContour3DLinearGrid::ProcessPiece(
         default:
           vtkGenericWarningMacro(<< "Scalar type not supported");
           return;
-      };
+      }
 
       // Multiple contour values require accumulating points & triangles
       totalPts = outPts->GetNumberOfPoints();

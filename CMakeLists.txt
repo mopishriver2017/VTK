@@ -51,6 +51,7 @@ add_library(VTK::vtkbuild ALIAS vtkbuild)
 include(vtkCompilerChecks)
 include(vtkCompilerPlatformFlags)
 include(vtkCompilerExtraFlags)
+include(vtkCompilerWarningFlags)
 include(vtkInitializeBuildType)
 include(vtkSupportMacros)
 include(vtkDownload)
@@ -139,6 +140,11 @@ endif()
 option(VTK_ENABLE_LOGGING "Enable logging support." ON)
 mark_as_advanced(VTK_ENABLE_LOGGING)
 
+#-----------------------------------------------------------------------------
+# Add an option to enable/disable catalyst2 support.
+option(VTK_ENABLE_CATALYST "Build IOCatalystConduit module and VTK catalyst implementation." OFF)
+mark_as_advanced(VTK_ENABLE_CATALYST)
+
 include(vtkEncodeString)
 
 # Set up our directory structure for output libraries and binaries
@@ -173,10 +179,22 @@ set("_vtk_module_reason_VTK::Java"
   "via `VTK_WRAP_JAVA`")
 # For vtkTkRenderWidget (only useful with Python, since WRAP_TCL is gone)
 if (VTK_USE_TK)
-  set(VTK_GROUP_ENABLE_Tk YES)
+  if (VTK_GROUP_ENABLE_Tk STREQUAL "DEFAULT")
+    set(VTK_GROUP_ENABLE_Tk "WANT")
+  elseif (VTK_GROUP_ENABLE_Tk STREQUAL "NO")
+    message(FATAL_ERROR "VTK_USE_TK=ON is not compatible with VTK_GROUP_ENABLE_Tk=NO")
+  endif ()
 endif ()
 if (VTK_USE_MPI)
-  set(VTK_GROUP_ENABLE_MPI YES)
+  if (VTK_GROUP_ENABLE_MPI STREQUAL "DEFAULT")
+    set(VTK_GROUP_ENABLE_MPI "WANT")
+  elseif (VTK_GROUP_ENABLE_MPI STREQUAL "NO")
+    message(FATAL_ERROR "VTK_USE_MPI=ON is not compatible with VTK_GROUP_ENABLE_MPI=NO")
+  endif ()
+  list(APPEND vtk_requested_modules
+    VTK::ParallelMPI)
+  set("_vtk_module_reason_VTK::ParallelMPI"
+    "via `VTK_USE_MPI`")
 else ()
   # Reject `VTK::mpi`, but allow those which happen to be part of the group to
   # be built.
@@ -192,6 +210,15 @@ if (VTK_ENABLE_LOGGING)
   set("_vtk_module_reason_VTK::loguru"
     "via `VTK_ENABLE_LOGGING`")
 endif ()
+if (VTK_ENABLE_CATALYST)
+  list(APPEND vtk_requested_modules
+    VTK::IOCatalystConduit)
+else()
+  list(APPEND vtk_rejected_modules
+    VTK::IOCatalystConduit)
+endif()
+set("_vtk_module_reason_VTK::IOCatalystConduit"
+  "via `VTK_ENABLE_CATALYST`")
 
 if (VTK_BUILD_TESTING)
   list(APPEND vtk_requested_modules
@@ -405,6 +432,7 @@ vtk_module_build(
   TARGET_SPECIFIC_COMPONENTS  "${VTK_TARGET_SPECIFIC_COMPONENTS}"
   TEST_INPUT_DATA_DIRECTORY   "${CMAKE_CURRENT_SOURCE_DIR}/Testing"
   TEST_OUTPUT_DATA_DIRECTORY  "${CMAKE_CURRENT_BINARY_DIR}/ExternalData/Testing")
+
 include(vtkModuleJson)
 vtk_module_json(
   MODULES ${vtk_modules}

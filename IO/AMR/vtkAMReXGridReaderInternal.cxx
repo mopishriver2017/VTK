@@ -57,7 +57,7 @@ RealDescriptor::RealDescriptor(const long* fr_, const int* ord_, int ordl_)
 
 const long* RealDescriptor::format() const&
 {
-  return &fr[0];
+  return fr.data();
 }
 
 const std::vector<long>& RealDescriptor::formatarray() const&
@@ -67,7 +67,7 @@ const std::vector<long>& RealDescriptor::formatarray() const&
 
 const int* RealDescriptor::order() const&
 {
-  return &ord[0];
+  return ord.data();
 }
 
 const std::vector<int>& RealDescriptor::orderarray() const&
@@ -251,7 +251,7 @@ int vtkAMReXGridHeader::CheckComponent(const std::string& name)
 {
   const std::size_t pos = name.find_last_of(this->nameDelim);
   // we expect to use the character just past pos
-  // so we don't want to accidentially jump outside the string
+  // so we don't want to accidentally jump outside the string
   if (pos > name.size() - 1)
   {
     return -1;
@@ -1093,7 +1093,7 @@ void vtkAMReXGridReaderInternal::GetExtraMultiFabBlockAttribute(
     constexpr long ieee_double[] = { 64L, 11L, 52L, 0L, 1L, 12L, 0L, 0x3FFL };
 
     // get the index of the extra multifab
-    if (this->Header->extraMultiFabParsedVarNames[attribute].size() == 0)
+    if (this->Header->extraMultiFabParsedVarNames[attribute].empty())
     {
       return; // variable is malformed or nonexistent
     }
@@ -1216,7 +1216,7 @@ int vtkAMReXGridReaderInternal::GetOffsetOfAttribute(const char* attribute)
 
   while (i < this->Header->variableNamesSize && !found)
   {
-    if (strcmp(this->Header->variableNames[i].c_str(), attribute) == 0)
+    if (this->Header->variableNames[i] == attribute)
     {
       found = true;
       position = i;
@@ -1368,7 +1368,7 @@ RealDescriptor* vtkAMReXGridReaderInternal::ReadRealDescriptor(std::istream& is)
   //
   // ord.size() is either 4 or 8 for float or double respectively - cast to int is safe
   //
-  return new RealDescriptor(&fmt[0], &ord[0], static_cast<int>(ord.size()));
+  return new RealDescriptor(fmt.data(), ord.data(), static_cast<int>(ord.size()));
 }
 
 int vtkAMReXGridReaderInternal::ReadBoxArray(std::istream& is, int* boxArray, int* boxArrayDim)

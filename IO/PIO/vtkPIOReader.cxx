@@ -168,7 +168,7 @@ int vtkPIOReader::RequestInformation(vtkInformation* vtkNotUsed(reqInfo),
   }
 
   // Set the current TIME_STEP() data based on requested TimeArrayName
-  if (strcmp(this->ActiveTimeDataArrayName, this->CurrentTimeDataArrayName.c_str()) != 0)
+  if (this->ActiveTimeDataArrayName != this->CurrentTimeDataArrayName)
   {
     this->CurrentTimeDataArrayName = this->ActiveTimeDataArrayName;
     if (strcmp(this->ActiveTimeDataArrayName, "SimulationTime") == 0)
@@ -271,7 +271,7 @@ int vtkPIOReader::RequestData(vtkInformation* vtkNotUsed(reqInfo),
   }
   else
   {
-    // Pipeline actived from python script
+    // Pipeline activated from python script
     if (this->CurrentTimeStep < 0 || this->CurrentTimeStep >= this->NumberOfTimeSteps)
     {
       this->CurrentTimeStep = 0;

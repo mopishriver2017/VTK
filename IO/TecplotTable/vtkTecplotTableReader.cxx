@@ -180,7 +180,7 @@ public:
     // Look for field delimiters unless we're in a string ...
     if (!this->WithinString && this->FieldDelimiters.count(value))
     {
-      // Handle special case of merging consective delimiters ...
+      // Handle special case of merging consecutive delimiters ...
       if (!(this->CurrentField.empty() && this->MergeConsDelims))
       {
         if (!(this->CurrentFieldIndex < SkipColumnNames &&
@@ -207,11 +207,7 @@ public:
     {
       std::string curr_char;
       utf8::append(value, std::back_inserter(curr_char));
-      if (curr_char == "0")
-      {
-        this->CurrentField += "\0";
-      }
-      else if (curr_char == "a")
+      if (curr_char == "a")
       {
         this->CurrentField += "\a";
       }
@@ -243,7 +239,7 @@ public:
       {
         this->CurrentField += "\\";
       }
-      else
+      else if (!(curr_char == "0"))
       {
         this->CurrentField += curr_char;
       }

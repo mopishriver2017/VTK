@@ -628,7 +628,7 @@ int vtkDataSetSurfaceFilter::StructuredExecute(
       TRACE, "StructuredExecute Using GeometryFilter (fastMode=%d)", (int)this->GetFastMode());
     vtkNew<vtkGeometryFilter> geometryFilter;
     vtkGeometryFilterHelper::CopyFilterParams(this, geometryFilter);
-    return geometryFilter->StructuredExecute(input, output, nullptr, nullptr);
+    return geometryFilter->StructuredExecute(input, output, nullptr, nullptr, nullptr);
   }
 
   if (::StructuredExecuteWithBlanking(vtkImageData::SafeDownCast(input), output, this) ||
@@ -1249,7 +1249,7 @@ int vtkDataSetSurfaceFilter::RequestUpdateExtent(vtkInformation* vtkNotUsed(requ
     // PolyData does not need any ghost levels.
     vtkDataObject* dobj = inInfo->Get(vtkDataObject::DATA_OBJECT());
     if (dobj && !strcmp(dobj->GetClassName(), "vtkUnstructuredGrid"))
-    { // Processing does nothing fo ghost levels yet so ...
+    { // Processing does nothing for ghost levels yet so ...
       // Be careful to set output ghost level value one less than default
       // when they are implemented.  I had trouble with multiple executes.
       ++ghostLevels;
@@ -1281,7 +1281,8 @@ void vtkDataSetSurfaceFilter::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "OriginalCellIdsName: " << this->GetOriginalCellIdsName() << endl;
   os << indent << "OriginalPointIdsName: " << this->GetOriginalPointIdsName() << endl;
   os << indent << "NonlinearSubdivisionLevel: " << this->GetNonlinearSubdivisionLevel() << endl;
-  os << indent << "FastMode: " << this->FastMode << endl;
+  os << indent << "FastMode: " << this->GetFastMode() << endl;
+  os << indent << "Delegation: " << this->GetDelegation() << endl;
 }
 
 //========================================================================
@@ -2723,15 +2724,6 @@ vtkIdType vtkDataSetSurfaceFilter::GetOutputPointIdAndInterpolate(vtkIdType inPt
 
 //------------------------------------------------------------------------------
 vtkIdType vtkDataSetSurfaceFilter::GetInterpolatedPointId(vtkIdType edgePtA, vtkIdType edgePtB,
-  vtkDataSet* input, vtkCell* cell, double pcoords[3], vtkPoints* outPts, vtkPointData* outPD)
-{
-  std::vector<double> weights(cell->GetNumberOfPoints());
-  return this->GetInterpolatedPointId(
-    edgePtA, edgePtB, input, cell, pcoords, weights.data(), outPts, outPD);
-}
-
-//------------------------------------------------------------------------------
-vtkIdType vtkDataSetSurfaceFilter::GetInterpolatedPointId(vtkIdType edgePtA, vtkIdType edgePtB,
   vtkDataSet* input, vtkCell* cell, double pcoords[3], double* weights, vtkPoints* outPts,
   vtkPointData* outPD)
 {
@@ -2786,29 +2778,4 @@ void vtkDataSetSurfaceFilter::RecordOrigPointId(vtkIdType destIndex, vtkIdType o
   {
     this->OriginalPointIds->InsertValue(destIndex, originalId);
   }
-}
-
-//------------------------------------------------------------------------------
-vtkTypeBool vtkDataSetSurfaceFilter::GetUseStrips()
-{
-  VTK_LEGACY_BODY(vtkDataSetSurfaceFilter::GetUseStrips, "VTK 9.1");
-  return false;
-}
-
-//------------------------------------------------------------------------------
-void vtkDataSetSurfaceFilter::SetUseStrips(vtkTypeBool)
-{
-  VTK_LEGACY_BODY(vtkDataSetSurfaceFilter::SetUseStrips, "VTK 9.1");
-}
-
-//------------------------------------------------------------------------------
-void vtkDataSetSurfaceFilter::UseStripsOn()
-{
-  VTK_LEGACY_BODY(vtkDataSetSurfaceFilter::UseStripsOn, "VTK 9.1");
-}
-
-//------------------------------------------------------------------------------
-void vtkDataSetSurfaceFilter::UseStripsOff()
-{
-  VTK_LEGACY_BODY(vtkDataSetSurfaceFilter::UseStripsOff, "VTK 9.1");
 }

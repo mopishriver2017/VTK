@@ -793,7 +793,7 @@ void vtkXRenderWindowInteractor::DispatchEvent(XEvent* event)
       this->InvokeEvent(vtkCommand::DropFilesEvent, filePaths);
       XFree(data);
 
-      // Inform the source the the drag and drop operation was sucessfull
+      // Inform the source the the drag and drop operation was successful
       XEvent reply;
       memset(&reply, 0, sizeof(reply));
 
@@ -850,7 +850,7 @@ void vtkXRenderWindowInteractor::DispatchEvent(XEvent* event)
 
         // Check one of these format is an URI list
         // Which is the only supported format
-        for (int i = 0; i < count; i++)
+        for (unsigned long i = 0; i < count; i++)
         {
           if (formats[i] == this->XdndURIListAtom)
           {
@@ -868,7 +868,7 @@ void vtkXRenderWindowInteractor::DispatchEvent(XEvent* event)
       if (event->xclient.message_type == this->XdndPositionAtom)
       {
         // Drag and drop event inside the window
-        if (this->XdndSource != event->xclient.data.l[0])
+        if (this->XdndSource != static_cast<Window>(event->xclient.data.l[0]))
         {
           vtkWarningMacro("Only one dnd action at a time is supported");
           return;
@@ -909,7 +909,7 @@ void vtkXRenderWindowInteractor::DispatchEvent(XEvent* event)
       else if (event->xclient.message_type == this->XdndDropAtom)
       {
         // Item dropped in the window
-        if (this->XdndSource != event->xclient.data.l[0])
+        if (this->XdndSource != static_cast<Window>(event->xclient.data.l[0]))
         {
           vtkWarningMacro("Only one dnd action at a time is supported");
           return;
@@ -929,7 +929,6 @@ void vtkXRenderWindowInteractor::DispatchEvent(XEvent* event)
 
           reply.type = ClientMessage;
           reply.xclient.window = this->XdndSource;
-          ;
           reply.xclient.message_type = this->XdndFinishedAtom;
           reply.xclient.format = 32;
           reply.xclient.data.l[0] = this->WindowId;

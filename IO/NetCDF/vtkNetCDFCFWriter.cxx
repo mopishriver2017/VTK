@@ -71,7 +71,7 @@ nc_type VTKTypeToNetCDFType(int type)
   switch (type)
   {
       // we use BYTE for char and signed char because NC_CHAR is an ascii character.
-      // and NetCDF reports an error if you store somthing else.
+      // and NetCDF reports an error if you store something else.
     case VTK_CHAR:
     case VTK_SIGNED_CHAR:
     case VTK_UNSIGNED_CHAR:
@@ -99,7 +99,7 @@ void SaveCoords(int ncid, int attributeType, const std::array<int, 3>& coordid,
   int status;
   for (int i = 0; i < 3; ++i)
   {
-    if ((status = nc_put_var_double(ncid, coordid[i], &coord[i][0])))
+    if ((status = nc_put_var_double(ncid, coordid[i], coord[i].data())))
     {
       std::ostringstream ostr;
       ostr << "Error nc_put_var_double " << COORD_NAME[attributeType][i] << ": "
@@ -111,7 +111,7 @@ void SaveCoords(int ncid, int attributeType, const std::array<int, 3>& coordid,
   {
     for (int i = 0; i < 3; ++i)
     {
-      if ((status = nc_put_var_double(ncid, boundsid[i], &bounds[i][0][0])))
+      if ((status = nc_put_var_double(ncid, boundsid[i], bounds[i][0].data())))
       {
         std::ostringstream ostr;
         ostr << "Error nc_put_var_double " << BOUNDS_NAME[attributeType][i] << ": "
@@ -607,7 +607,7 @@ void vtkNetCDFCFWriter::WriteData()
     vtkImageData* id = vtkImageData::SafeDownCast(dataset);
     if (!id)
     {
-      throw std::runtime_error("Writer expectes an input of type vtkImageData");
+      throw std::runtime_error("Writer expects an input of type vtkImageData");
     }
     vtkDataSetAttributes* attributes = dataset->GetAttributes(this->AttributeType);
     if (!attributes || !attributes->GetNumberOfArrays())

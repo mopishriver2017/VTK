@@ -904,7 +904,7 @@ int vtkExodusIIWriter::ConstructBlockInfoMap()
             break;
           default:
             b.NodesPerElement = this->FlattenedInput[i]->GetCell(j)->GetNumberOfPoints();
-        };
+        }
 
         // TODO this could be a push if i is different.
         b.GridIndex = i;
@@ -1991,7 +1991,7 @@ int vtkExodusIIWriter::WriteBlockInformation()
       if (blockIter->second.NodesPerElement == 0)
       {
         rc = ex_put_entity_count_per_polyhedra(
-          this->fid, EX_ELEM_BLOCK, blockIter->first, &(blockIter->second.EntityCounts[0]));
+          this->fid, EX_ELEM_BLOCK, blockIter->first, blockIter->second.EntityCounts.data());
       }
     }
   }

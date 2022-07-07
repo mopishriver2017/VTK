@@ -59,9 +59,15 @@ if (VTK_USE_MEMKIND)
     PACKAGE MEMKIND)
   list(APPEND vtk_memkind_libraries
     MEMKIND::MEMKIND)
-  get_target_property(memkind_version_minor MEMKIND::MEMKIND MEMKIND_VERSION_MINOR)
-  list(APPEND vtk_object_base_defines "MEMKIND_VERSION_MINOR=${memkind_version_minor}")
-endif()
+  # XXX(memkind-1.10): Once 1.10 is required, this is always true.
+  file(READ "${MEMKIND_INCLUDE_DIR}/memkind.h" memkind_h_contents)
+  set(memkind_has_dax_kmem 0)
+  # Look for the symbol in the header.
+  if (memkind_h_contents MATCHES " MEMKIND_DAX_KMEM[ ;\n]")
+    set(memkind_has_dax_kmem 1)
+  endif ()
+  list(APPEND vtk_object_base_defines "VTK_MEMKIND_HAS_DAX_KMEM=$<BOOL:${memkind_has_dax_kmem}>")
+endif ()
 
 # Generate the vtkTypeList_Create macros:
 include("${CMAKE_CURRENT_SOURCE_DIR}/vtkCreateTypeListMacros.cmake")
@@ -138,6 +144,7 @@ set(classes
   vtkArrayRange
   vtkArraySort
   vtkArrayWeights
+  vtkAtomicMutex
   vtkBitArray
   vtkBitArrayIterator
   vtkBoxMuellerRandomSequence
@@ -242,10 +249,7 @@ set(classes
   vtkXMLFileOutputWindow
 
   # These classes are deprecated.
-  vtkConditionVariable
-  vtkCriticalSection
-  vtkSimpleCriticalSection
-  vtkMutexLock)
+  vtkCriticalSection)
 
 set(template_classes
   vtkAOSDataArrayTemplate
@@ -439,10 +443,6 @@ set(generated_headers
   vtkThreads.h
   vtkVersionFull.h
   vtkVersionMacros.h)
-if (NOT VTK_LEGACY_REMOVE)
-  list(APPEND generated_headers
-    vtkConfigureDeprecated.h)
-endif ()
 foreach (generated_header IN LISTS generated_headers)
   configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/${generated_header}.in"
@@ -451,12 +451,6 @@ foreach (generated_header IN LISTS generated_headers)
   list(APPEND headers
     "${CMAKE_CURRENT_BINARY_DIR}/${generated_header}")
 endforeach ()
-
-if (NOT VTK_LEGACY_REMOVE)
-  list(APPEND nowrap_headers
-    vtkConfigure.h
-    vtkToolkits.h)
-endif ()
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/vtkTypeArrays.cmake")
 
@@ -517,20 +511,9 @@ configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/vtkFloatingPointExceptionsConfigure.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/vtkFloatingPointExceptionsConfigure.h")
 
-# Allow work arounds for lack of thread_local on odd compilers
-set(vtk_logger_defines)
-if (NOT (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0) )
-  list(APPEND vtk_object_base_defines "VTK_HAS_THREADLOCAL")
-  list(APPEND vtk_logger_defines "VTK_HAS_THREADLOCAL")
-endif ()
-
 set_property(SOURCE vtkObjectBase.cxx
   PROPERTY
      COMPILE_DEFINITIONS ${vtk_object_base_defines})
-
-set_property(SOURCE vtkLogger.cxx
-  PROPERTY
-     COMPILE_DEFINITIONS ${vtk_logger_defines})
 
 if(MSVC)
   set_source_files_properties(

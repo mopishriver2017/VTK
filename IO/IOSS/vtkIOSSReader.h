@@ -117,7 +117,7 @@
  * provides the partition information.
  *
  * Note, the database need not be split into multiple files. Thus, a writer may
- * generate a single `can.e` file that has all the timesteps and paritions and
+ * generate a single `can.e` file that has all the timesteps and partitions and
  * still provide all information available when the database is split among
  * multiple files.
  *
@@ -220,6 +220,25 @@ public:
    */
   void SetDisplacementMagnitude(double magnitude);
   double GetDisplacementMagnitude();
+  ///@}
+
+  ///@{
+  /**
+   * Set whether the reader should treat numeric suffixes for a variable as vector components.
+   * If true, DENSITY_1, DENSITY_2, DENSITY_3, DENSITY_4 fields will be parsed as 4 vtkDataArrays
+   * each with 1 component. When false, those fields will be parsed as a 4-component vtkDataArray
+   * named DESNITY.
+   */
+  void SetIgnoreRealNFields(bool value);
+  bool GetIgnoreRealNFields();
+  ///@}
+
+  ///@{
+  /**
+   * Set the character used to separate suffix from the field.
+   */
+  void SetFieldSuffixSeparator(const char* value);
+  std::string GetFieldSuffixSeparator();
   ///@}
 
   ///@{

@@ -123,10 +123,9 @@ constexpr vtkIdType valenceAtPoint[vtkPyramid::NumberOfPoints] = {
   3  // 4
 };
 
-typedef int EDGE_LIST;
 struct TRIANGLE_CASES_t
 {
-  EDGE_LIST edges[13];
+  int edges[13];
 };
 using TRIANGLE_CASES = struct TRIANGLE_CASES_t;
 TRIANGLE_CASES triCases[] = {
@@ -521,7 +520,7 @@ void vtkPyramid::Contour(double value, vtkDataArray* cellScalars,
 {
   static const int CASE_MASK[5] = { 1, 2, 4, 8, 16 };
   TRIANGLE_CASES* triCase;
-  EDGE_LIST* edge;
+  int* edge;
   int i, j, index, v1, v2, newCellId;
   const vtkIdType* vert;
   vtkIdType pts[3];
@@ -857,10 +856,10 @@ void vtkPyramid::Derivatives(
     // derivatives which really ends up as the same thing.
     double pcoords1[3] = { .5, .5, 2. * .998 - pcoords[2] };
     std::vector<double> derivs1(3 * dim);
-    this->Derivatives(subId, pcoords1, values, dim, &(derivs1[0]));
+    this->Derivatives(subId, pcoords1, values, dim, derivs1.data());
     double pcoords2[3] = { .5, .5, .998 };
     std::vector<double> derivs2(3 * dim);
-    this->Derivatives(subId, pcoords2, values, dim, &(derivs2[0]));
+    this->Derivatives(subId, pcoords2, values, dim, derivs2.data());
     for (int i = 0; i < dim * 3; i++)
     {
       derivs[i] = 2. * derivs2[i] - derivs1[i];
@@ -1050,9 +1049,9 @@ vtkIdType vtkPyramid::GetFacePoints(vtkIdType faceId, const vtkIdType*& pts)
   return numberOfPointsInFace[faceId];
 }
 
-// The choice of the parametric coord for the top coner of the pyramid
+// The choice of the parametric coord for the top corner of the pyramid
 // is not unique and is defined by (a, b, 1.), where a, b in [0., 1.].
-// In the current implementation, it is arbitrary definied to (0., 0., 1.).
+// In the current implementation, it is arbitrary defined to (0., 0., 1.).
 static double vtkPyramidCellPCoords[15] = {
   0.0, 0.0, 0.0, //
   1.0, 0.0, 0.0, //

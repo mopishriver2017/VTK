@@ -73,7 +73,7 @@ Required:
   * Supported compiler
     - GCC 4.8 or newer
     - Clang 3.3 or newer
-    - Apple Clang 5.0 (from Xcode 5.0) or newer
+    - Apple Clang 7.0 (from Xcode 7.2.1) or newer
     - Microsoft Visual Studio 2015 or newer
     - Intel 14.0 or newer
 
@@ -213,6 +213,8 @@ Less common, but variables which may be of interest to some:
     will be implemented by default. Must be either `Sequential`, `STDThread`,
     `OpenMP` or `TBB`. The backend can be changed at runtime if the desired
     backend has his option `VTK_SMP_ENABLE_<backend_name>` set to `ON`.
+  * `VTK_ENABLE_CATALYST` (default `OFF`): Enable the CatlystConduit module
+  and build the VTK Catalyst implementation. Depends on an external Catalyst.
 
 More advanced options:
 
@@ -223,6 +225,11 @@ More advanced options:
   * `VTK_ENABLE_REMOTE_MODULES` (default `ON`): If set, VTK will try to build
     remote modules (the `Remote` directory). If unset, no remote modules will
     build.
+  * `VTK_ENABLE_EXTRA_BUILD_WARNINGS` (default `OFF`; requires CMake >= 3.19):
+    If set, VTK will enable additional build warnings.
+  * `VTK_ENABLE_EXTRA_BUILD_WARNINGS_EVERYTHING` (default `OFF`; requires
+    `VTK_ENABLE_EXTRA_BUILD_WARNINGS` and `-Weverything` support): If set, VTK
+    will enable all build warnings (with some explicitly turned off).
   * `VTK_USE_EXTERNAL` (default `OFF`): Whether to prefer external third
     party libraries or the versions VTK's source contains.
   * `VTK_TARGET_SPECIFIC_COMPONENTS` (default `OFF`): Whether to install
@@ -310,7 +317,7 @@ More advanced options:
     `vtkObjectFactoryNewMacro` or `vtkAbstractObjectFactoryNewMacro`.
   * `VTK_ENABLE_VTKM_OVERRIDES` (default `OFF`): If `ON`, enables factory override
      of certain VTK filters by their VTK-m counterparts. There is also a runtime
-     switch that should also be turned on to enable this feature.
+     switch that can be used to enable/disable the overrides at run-time (on by default).
      It can be accessed using the static function `vtkmFilterOverrides::SetEnabled(bool)`.
 
 The VTK module system provides a number of variables to control modules which

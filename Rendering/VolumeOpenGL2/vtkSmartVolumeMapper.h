@@ -293,6 +293,28 @@ public:
   vtkGetMacro(SampleDistance, float);
   ///@}
 
+  ///@{
+  /**
+   * @copydoc vtkGPUVolumeRayCastMapper::SetGlobalIlluminationReach(float)
+   *
+   * This parameter is only used when the underlying mapper
+   * is a vtkGPUVolumeRayCastMapper.
+   */
+  vtkSetClampMacro(GlobalIlluminationReach, float, 0.0f, 1.0f);
+  vtkGetMacro(GlobalIlluminationReach, float);
+  ///@}
+
+  ///@{
+  /**
+   * @copydoc vtkGPUVolumeRayCastMapper::SetVolumetricScatteringBlending(float)
+   *
+   * This parameter is only used when the underlying mapper
+   * is a vtkGPUVolumeRayCastMapper.
+   */
+  vtkSetClampMacro(VolumetricScatteringBlending, float, 0.0f, 2.0f);
+  vtkGetMacro(VolumetricScatteringBlending, float);
+  ///@}
+
   /**
    * WARNING: INTERNAL METHOD - NOT INTENDED FOR GENERAL USE
    * Initialize rendering for this volume.
@@ -457,6 +479,16 @@ protected:
   float SampleDistance;
 
   /**
+   * Secondary rays ambient/global adjustment coefficient
+   */
+  float GlobalIlluminationReach = 0.0;
+
+  /**
+   * Blending coefficient between surfacic and volumetric models in GPU Mapper
+   */
+  float VolumetricScatteringBlending = 0.0;
+
+  /**
    * Set whether or not the sample distance should be automatically calculated
    * within the internal volume mapper
    */
@@ -493,7 +525,7 @@ protected:
 
   ///@{
   /**
-   * Keep a cache of the last input to the mapper so that input data changes can be propogated to
+   * Keep a cache of the last input to the mapper so that input data changes can be propagated to
    * the resample filter and internal mappers.
    */
   vtkDataSet* LastInput;

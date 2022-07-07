@@ -75,10 +75,13 @@ public:
 };
 
 #define vtkSocketCommunicatorErrorMacro(msg)                                                       \
-  if (this->ReportErrors)                                                                          \
+  do                                                                                               \
   {                                                                                                \
-    vtkErrorMacro(msg);                                                                            \
-  }
+    if (this->ReportErrors)                                                                        \
+    {                                                                                              \
+      vtkErrorMacro(msg);                                                                          \
+    }                                                                                              \
+  } while (false)
 
 // The handshake checks that the client and server are using the same
 // version of this source file.  It first compares a fixed integer
@@ -244,7 +247,7 @@ int vtkSocketCommunicator::SendVoidArray(
     newData.resize(length);
     std::copy(reinterpret_cast<const vtkIdType*>(data),
       reinterpret_cast<const vtkIdType*>(data) + length, newData.begin());
-    return this->SendVoidArray(&newData[0], length, VTK_INT, remoteProcessId, tag);
+    return this->SendVoidArray(newData.data(), length, VTK_INT, remoteProcessId, tag);
   }
 #endif
 
@@ -314,7 +317,7 @@ int vtkSocketCommunicator::ReceiveVoidArray(
   {
     std::vector<int> newData;
     newData.resize(length);
-    int retval = this->ReceiveVoidArray(&newData[0], length, VTK_INT, remoteProcessId, tag);
+    int retval = this->ReceiveVoidArray(newData.data(), length, VTK_INT, remoteProcessId, tag);
     std::copy(newData.begin(), newData.end(), reinterpret_cast<vtkIdType*>(data));
     return retval;
   }
@@ -745,7 +748,7 @@ int vtkSocketCommunicator::ReceivedTaggedFromBuffer(
 
   // The static_cast is OK since we split messages > VTK_INT_MAX.
   this->TagMessageLength = static_cast<int>(message.size()) / wordSize;
-  memcpy(data, &message[0], message.size());
+  memcpy(data, message.data(), message.size());
   this->ReceivedMessageBuffer->Pop(tag);
 
   this->FixByteOrder(data, wordSize, numWords);

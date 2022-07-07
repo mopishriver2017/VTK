@@ -209,14 +209,20 @@ if ("$ENV{CMAKE_CONFIGURATION}" MATCHES "macos_arm64")
     "^VTK::FiltersGeneralPython-TestCellDerivs$"
     "^VTK::FiltersHyperTreeCxx-TestHyperTreeGridBinaryClipPlanes$"
     "^VTK::RenderingAnnotationCxx-TestCubeAxes3$"
-    "^VTK::RenderingAnnotationCxx-TestCubeAxesWithYLines$")
+    "^VTK::RenderingAnnotationCxx-TestCubeAxesWithYLines$"
+
+    # Random Memory Leak #18599
+    "^VTK::FiltersCorePython-probe$")
 endif ()
 
 if ("$ENV{CMAKE_CONFIGURATION}" MATCHES "macos_x86_64")
   # Screenshot issue for test comparison with background buffer (intermittent)
   list(APPEND test_exclusions
     "^VTK::GUISupportQtQuickCxx-TestQQuickVTKRenderItemWidget$"
-    "^VTK::GUISupportQtQuickCxx-TestQQuickVTKRenderWindow$")
+    "^VTK::GUISupportQtQuickCxx-TestQQuickVTKRenderWindow$"
+
+    # Random Memory Leak #18599
+    "^VTK::FiltersCorePython-probe$")
 endif ()
 
 if ("$ENV{CMAKE_CONFIGURATION}" MATCHES "offscreen")
@@ -237,7 +243,24 @@ if ("$ENV{CMAKE_CONFIGURATION}" MATCHES "stdthread")
   list(APPEND test_exclusions
     # Timeout; needs investigated
     # See #18477
-    "^VTK::FiltersModelingPython-TestCookieCutter4$")
+    "^VTK::FiltersModelingPython-TestCookieCutter4$"
+   
+    # Masking is inconsistent with STDThread 
+    # See #18549
+    "^VTK::RenderingCoreCxx-TestGlyph3DMapperMasking$"
+    
+    # Test fails sometimes with STDThread
+    # See #18555
+    "^VTK::FiltersFlowPathsCxx-TestEvenlySpacedStreamlines2D$"
+    )
+endif ()
+
+if ("$ENV{CMAKE_CONFIGURATION}" MATCHES "vtkmoverride")
+  list(APPEND test_exclusions
+    # vtkmContour behaves differently than vtkContourFilter for these tests.
+    # Further investigation is needed to determine how to best handle these cases.
+    "^VTK::FiltersModelingPython-TestBoxFunction$"
+    "^VTK::FiltersCorePython-TestContourCases$")
 endif ()
 
 string(REPLACE ";" "|" test_exclusions "${test_exclusions}")

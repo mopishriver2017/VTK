@@ -662,7 +662,7 @@ int ExtractCells(vtkExtractCellsAlongPolyLine* self, vtkDataSet* input, vtkPoint
   vtkNew<vtkUnsignedCharArray> outputCellTypes;
 
 #ifdef VTK_USE_64BIT_IDS
-  if (!(numberOfPoints >> 32))
+  if (!(numberOfPoints >> 31))
   {
     outputCells->ConvertTo32BitStorage();
   }
@@ -759,7 +759,7 @@ vtkExtractCellsAlongPolyLine::~vtkExtractCellsAlongPolyLine() = default;
 int vtkExtractCellsAlongPolyLine::RequestData(
   vtkInformation*, vtkInformationVector** inputVector, vtkInformationVector* outputVector)
 {
-  // Check inputs / ouputs
+  // Check inputs / outputs
   vtkInformation* inputInfo = inputVector[0]->GetInformationObject(0);
   vtkInformation* samplerInfo = inputVector[1]->GetInformationObject(0);
   vtkInformation* outInfo = outputVector->GetInformationObject(0);

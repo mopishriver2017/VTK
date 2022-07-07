@@ -59,7 +59,6 @@
 class vtkIOSSWriter::vtkInternals
 {
   Ioss::Init::Initializer io;
-  vtkIOSSWriter* Self = nullptr;
 
 public:
   std::unique_ptr<Ioss::Region> Region;
@@ -68,10 +67,7 @@ public:
   int RestartIndex{ 0 };
   std::string LastMD5;
 
-  vtkInternals(vtkIOSSWriter* self)
-    : Self(self)
-  {
-  }
+  vtkInternals() = default;
   ~vtkInternals() = default;
 };
 
@@ -79,7 +75,7 @@ vtkStandardNewMacro(vtkIOSSWriter);
 vtkCxxSetObjectMacro(vtkIOSSWriter, Controller, vtkMultiProcessController);
 //----------------------------------------------------------------------------
 vtkIOSSWriter::vtkIOSSWriter()
-  : Internals(new vtkIOSSWriter::vtkInternals(this))
+  : Internals(new vtkIOSSWriter::vtkInternals)
   , Controller(nullptr)
   , FileName(nullptr)
   , OffsetGlobalIds(false)
@@ -261,7 +257,7 @@ int vtkIOSSWriter::RequestData(vtkInformation* request, vtkInformationVector** i
   model.Transient(*internals.Region, /*time=*/time);
 
   ++internals.CurrentTimeStep;
-  if (internals.CurrentTimeStep < internals.TimeSteps.size())
+  if (static_cast<size_t>(internals.CurrentTimeStep) < internals.TimeSteps.size())
   {
     request->Set(vtkStreamingDemandDrivenPipeline::CONTINUE_EXECUTING(), 1);
   }

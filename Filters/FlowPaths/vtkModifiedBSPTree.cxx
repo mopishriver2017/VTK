@@ -66,13 +66,9 @@ vtkModifiedBSPTree::~vtkModifiedBSPTree()
 //------------------------------------------------------------------------------
 void vtkModifiedBSPTree::FreeSearchStructure()
 {
-  if (this->mRoot)
-  {
-    delete this->mRoot;
-    this->mRoot = nullptr;
-    this->Level = 0;
-    this->npn = this->nln = this->tot_depth = 0;
-  }
+  this->mRoot.reset();
+  this->Level = 0;
+  this->npn = this->nln = this->tot_depth = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -116,44 +112,17 @@ public:
   }
 };
 
-extern "C" int CompareMin(const void* pA, const void* B)
-{
-  const cell_extents* tA = static_cast<const cell_extents*>(pA);
-  const cell_extents* tB = static_cast<const cell_extents*>(B);
-  if (tA->min == tB->min)
-  {
-    return 0;
-  }
-  else
-  {
-    return tA->min < tB->min ? -1 : 1;
-  }
-}
-
-extern "C" int CompareMax(const void* pA, const void* B)
-{
-  const cell_extents* tA = static_cast<const cell_extents*>(pA);
-  const cell_extents* tB = static_cast<const cell_extents*>(B);
-  if (tA->max == tB->max)
-  {
-    return 0;
-  }
-  else
-  {
-    return tA->max > tB->max ? -1 : 1;
-  }
-}
-
 //------------------------------------------------------------------------------
 void vtkModifiedBSPTree::BuildLocator()
 {
   // don't rebuild if build time is newer than modified and dataset modified time
-  if (this->mRoot && this->BuildTime > this->MTime && this->BuildTime > this->DataSet->GetMTime())
+  if (this->mRoot.get() && this->BuildTime > this->MTime &&
+    this->BuildTime > this->DataSet->GetMTime())
   {
     return;
   }
   // don't rebuild if UseExistingSearchStructure is ON and a search structure already exists
-  if (this->mRoot && this->UseExistingSearchStructure)
+  if (this->mRoot.get() && this->UseExistingSearchStructure)
   {
     this->BuildTime.Modified();
     vtkDebugMacro(<< "BuildLocator exited - UseExistingSearchStructure");
@@ -183,15 +152,11 @@ void vtkModifiedBSPTree::BuildLocatorInternal()
   this->FreeSearchStructure();
 
   // create the root node
-  this->mRoot = new BSPNode();
+  this->mRoot = std::make_shared<BSPNode>();
   this->mRoot->mAxis = rand() % 3;
   this->mRoot->depth = 0;
 
-  if (this->CacheCellBounds)
-  {
-    this->FreeCellBounds();
-    this->StoreCellBounds();
-  }
+  this->ComputeCellBounds();
 
   // sort the cells into 6 lists using structure for subdividing tests
   Sorted_cell_extents_Lists* lists = new Sorted_cell_extents_Lists(numCells);
@@ -223,7 +188,7 @@ void vtkModifiedBSPTree::BuildLocatorInternal()
   // call the recursive subdivision routine
   vtkDebugMacro(<< "Beginning Subdivision");
 
-  Subdivide(this->mRoot, lists, this->DataSet, numCells, 0, this->MaxLevel,
+  Subdivide(this->mRoot.get(), lists, this->DataSet, numCells, 0, this->MaxLevel,
     this->NumberOfCellsPerNode, this->Level);
   delete lists;
 
@@ -538,7 +503,7 @@ void vtkModifiedBSPTree::GenerateRepresentation(int level, vtkPolyData* pd)
   nodestack ns;
   boxlist bl;
   BSPNode* node;
-  ns.push(this->mRoot);
+  ns.push(this->mRoot.get());
   // lets walk the tree and get all the level n node boxes
   while (!ns.empty())
   {
@@ -691,7 +656,7 @@ int vtkModifiedBSPTree::IntersectWithLine(const double p1[3], const double p2[3]
       break;
   }
   // OK, lets walk the tree and find intersections
-  ns.push(this->mRoot);
+  ns.push(this->mRoot.get());
   while (!ns.empty())
   {
     node = ns.top();
@@ -857,7 +822,7 @@ int vtkModifiedBSPTree::IntersectWithLine(const double p1[3], const double p2[3]
   // we will sort intersections by t, so keep track using these lists
   std::vector<IntersectionInfo> cellIntersections;
   // OK, lets walk the tree and find intersections
-  ns.push(this->mRoot);
+  ns.push(this->mRoot.get());
   while (!ns.empty())
   {
     node = ns.top();
@@ -944,7 +909,7 @@ int vtkModifiedBSPTree::IntersectWithLine(const double p1[3], const double p2[3]
   {
     vtkIdType numIntersections = static_cast<vtkIdType>(cellIntersections.size());
     std::sort(cellIntersections.begin(), cellIntersections.end(),
-      [&](const IntersectionInfo& a, const IntersectionInfo b) { return a.T < b.T; });
+      [&](const IntersectionInfo& a, const IntersectionInfo& b) { return a.T < b.T; });
     if (points)
     {
       points->SetNumberOfPoints(numIntersections);
@@ -983,7 +948,7 @@ vtkIdType vtkModifiedBSPTree::FindCell(
   vtkIdType cellId;
   nodestack ns;
   BSPNode* node;
-  ns.push(this->mRoot);
+  ns.push(this->mRoot.get());
   double closestPoint[3], dist2;
   //
   while (!ns.empty())
@@ -1035,7 +1000,7 @@ vtkIdListCollection* vtkModifiedBSPTree::GetLeafNodeCellInformation()
   vtkIdListCollection* LeafCellsList = vtkIdListCollection::New();
   nodestack ns;
   BSPNode* node = nullptr;
-  ns.push(this->mRoot);
+  ns.push(this->mRoot.get());
   //
   while (!ns.empty())
   {
@@ -1068,9 +1033,42 @@ vtkIdListCollection* vtkModifiedBSPTree::GetLeafNodeCellInformation()
 }
 
 //------------------------------------------------------------------------------
+void vtkModifiedBSPTree::ShallowCopy(vtkAbstractCellLocator* locator)
+{
+  vtkModifiedBSPTree* cellLocator = vtkModifiedBSPTree::SafeDownCast(locator);
+  if (!cellLocator)
+  {
+    vtkErrorMacro("Cannot cast " << locator->GetClassName() << " to vtkModifiedBSPTree.");
+    return;
+  }
+  // we only copy what's actually used by vtkModifiedBSPTree
+
+  // vtkLocator parameters
+  this->SetDataSet(cellLocator->GetDataSet());
+  this->SetUseExistingSearchStructure(cellLocator->GetUseExistingSearchStructure());
+  this->SetMaxLevel(cellLocator->GetMaxLevel());
+  this->Level = cellLocator->Level;
+
+  // vtkAbstractCellLocator parameters
+  this->SetNumberOfCellsPerNode(cellLocator->GetNumberOfCellsPerNode());
+  this->CacheCellBounds = cellLocator->CacheCellBounds;
+  this->CellBoundsSharedPtr = cellLocator->CellBoundsSharedPtr; // This is important
+  this->CellBounds = this->CellBoundsSharedPtr.get() ? this->CellBoundsSharedPtr->data() : nullptr;
+
+  // vtkCellTreeLocator parameters
+  this->mRoot = cellLocator->mRoot; // This is important
+  this->npn = cellLocator->npn;
+  this->nln = cellLocator->nln;
+  this->tot_depth = cellLocator->tot_depth;
+}
+
+//------------------------------------------------------------------------------
 void vtkModifiedBSPTree::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
+  os << indent << "npn: " << this->npn << "\n";
+  os << indent << "nln: " << this->nln << "\n";
+  os << indent << "tot_depth: " << this->tot_depth << "\n";
 }
 
 //////////////////////////////////////////////////////////////////////////////

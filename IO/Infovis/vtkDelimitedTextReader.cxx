@@ -160,7 +160,7 @@ public:
     // Look for field delimiters unless we're in a string ...
     if (!this->WithinString && this->FieldDelimiters.count(value))
     {
-      // Handle special case of merging consective delimiters ...
+      // Handle special case of merging consecutive delimiters ...
       if (!(this->CurrentField.empty() && this->MergeConsDelims))
       {
         this->InsertField();
@@ -182,11 +182,7 @@ public:
     {
       std::string curr_char;
       utf8::append(value, std::back_inserter(curr_char));
-      if (curr_char == "0")
-      {
-        this->CurrentField += "\0";
-      }
-      else if (curr_char == "a")
+      if (curr_char == "a")
       {
         this->CurrentField += "\a";
       }
@@ -218,7 +214,7 @@ public:
       {
         this->CurrentField += "\\";
       }
-      else
+      else if (!(curr_char == "0"))
       {
         this->CurrentField += curr_char;
       }
@@ -375,12 +371,9 @@ void vtkDelimitedTextReader::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "UnicodeCharacterSet: "
      << (this->UnicodeCharacterSet ? this->UnicodeCharacterSet : "(none)") << endl;
   os << indent << "MaxRecords: " << this->MaxRecords << endl;
-  os << indent << "UnicodeRecordDelimiters: '" << this->UnicodeRecordDelimiters.c_str() << "'"
-     << endl;
-  os << indent << "UnicodeFieldDelimiters: '" << this->UnicodeFieldDelimiters.c_str() << "'"
-     << endl;
-  os << indent << "UnicodeStringDelimiters: '" << this->UnicodeStringDelimiters.c_str() << "'"
-     << endl;
+  os << indent << "UnicodeRecordDelimiters: '" << this->UnicodeRecordDelimiters << "'" << endl;
+  os << indent << "UnicodeFieldDelimiters: '" << this->UnicodeFieldDelimiters << "'" << endl;
+  os << indent << "UnicodeStringDelimiters: '" << this->UnicodeStringDelimiters << "'" << endl;
   os << indent << "StringDelimiter: " << this->StringDelimiter << endl;
   os << indent << "ReplacementCharacter: " << this->ReplacementCharacter << endl;
   os << indent << "FieldDelimiterCharacters: "

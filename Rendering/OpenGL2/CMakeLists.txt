@@ -102,15 +102,9 @@ set(headers
 
 set(nowrap_headers
   vtkCompositeMapperHelper2.h
-  vtkCompositePolyDataMapper2Internal.h
 )
 
-if (NOT VTK_LEGACY_REMOVE)
-  list(APPEND nowrap_headers
-    vtkOpenGL.h)
-endif ()
-
-# add opengl support test execulatble on windows
+# add opengl support test executable on windows
 if (WIN32 AND (NOT CMAKE_CROSSCOMPILING OR DEFINED CMAKE_CROSSCOMPILING_EMULATOR))
   vtk_module_add_executable(vtkTestOpenGLVersion vtkTestOpenGLVersion.cxx)
   set_target_properties(vtkTestOpenGLVersion
@@ -176,6 +170,14 @@ foreach(file IN LISTS shader_files)
   list(APPEND private_headers
     "${header}")
 endforeach()
+
+vtk_encode_string(
+  INPUT "textures/BlueNoiseTexture64x64.jpg"
+  HEADER_OUTPUT BlueNoiseTexture64x64_header
+  SOURCE_OUTPUT BlueNoiseTexture64x64_source
+  BINARY)
+list(APPEND sources "${BlueNoiseTexture64x64_source}")
+list(APPEND private_headers "${BlueNoiseTexture64x64_header}")
 
 # setup factory overrides
 set(opengl_overrides

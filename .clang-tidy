@@ -5,6 +5,7 @@ bugprone-*,\
 -bugprone-argument-comment,\
 -bugprone-branch-clone,\
 -bugprone-fold-init-type,\
+-bugprone-implicit-widening-of-multiplication-result,\
 -bugprone-incorrect-roundings,\
 -bugprone-infinite-loop,\
 -bugprone-integer-division,\
@@ -88,6 +89,7 @@ readability-*,\
 -readability-redundant-declaration,\
 -readability-redundant-preprocessor,\
 -readability-simplify-boolean-expr,\
+-readability-static-accessed-through-instance,\
 -readability-uppercase-literal-suffix,\
 -readability-use-anyofallof,\
 "

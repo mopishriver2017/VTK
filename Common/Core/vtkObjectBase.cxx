@@ -368,33 +368,19 @@ void vtkObjectBase::ReportReferences(vtkGarbageCollector*)
 
 namespace
 {
-#ifdef VTK_HAS_THREADLOCAL
 #ifdef VTK_USE_MEMKIND
-thread_local char* MemkindDirectory = nullptr;
+VTK_THREAD_LOCAL char* MemkindDirectory = nullptr;
 #endif
-thread_local bool UsingMemkind = false;
-thread_local vtkMallocingFunction CurrentMallocFunction = malloc;
-thread_local vtkReallocingFunction CurrentReallocFunction = realloc;
-thread_local vtkFreeingFunction CurrentFreeFunction = free;
-thread_local vtkFreeingFunction AlternateFreeFunction = vtkCustomFree;
-#else
-#ifdef VTK_USE_MEMKIND
-char* MemkindDirectory = nullptr;
-#endif
-bool UsingMemkind = false;
-vtkMallocingFunction CurrentMallocFunction = malloc;
-vtkReallocingFunction CurrentReallocFunction = realloc;
-vtkFreeingFunction CurrentFreeFunction = free;
-vtkFreeingFunction AlternateFreeFunction = vtkCustomFree;
-#endif
+VTK_THREAD_LOCAL bool UsingMemkind = false;
+VTK_THREAD_LOCAL vtkMallocingFunction CurrentMallocFunction = malloc;
+VTK_THREAD_LOCAL vtkReallocingFunction CurrentReallocFunction = realloc;
+VTK_THREAD_LOCAL vtkFreeingFunction CurrentFreeFunction = free;
+VTK_THREAD_LOCAL vtkFreeingFunction AlternateFreeFunction = vtkCustomFree;
 }
 
 //------------------------------------------------------------------------------
 void vtkObjectBase::SetMemkindDirectory(const char* directoryname)
 {
-#ifndef VTK_HAS_THREADLOCAL
-  vtkGenericWarningMacro(<< "Warning, memkind features are not thread safe on this platform.");
-#endif
 #ifdef VTK_USE_MEMKIND
   if (MemkindDirectory == nullptr && MemkindHandle == nullptr)
   {
@@ -410,7 +396,7 @@ void vtkObjectBase::SetMemkindDirectory(const char* directoryname)
     {
       if (!strncmp(directoryname, "DAX_KMEM", 8))
       {
-#if MEMKIND_VERSION_MINOR > 9
+#if VTK_MEMKIND_HAS_DAX_KMEM
         MemkindHandle = MEMKIND_DAX_KMEM;
 #else
         vtkGenericWarningMacro(<< "Warning, DAX_KMEM requires memkind >= 1.10");

@@ -32,11 +32,6 @@ vtkClosestPointStrategy::vtkClosestPointStrategy()
   this->CellIds->Allocate(32);
   this->NearPointIds->Allocate(32);
 
-  // You may ask why this OwnsLocator rigamarole. The reason is that the
-  // reference counting garbage collector gets confused when the locator,
-  // point set, and strategy are all mixed together; resulting in memory
-  // leaks etc.
-  this->OwnsLocator = false;
   this->PointLocator = nullptr;
 }
 
@@ -94,10 +89,14 @@ int vtkClosestPointStrategy::Initialize(vtkPointSet* ps)
   vtkAbstractPointLocator* psPL = ps->GetPointLocator();
   if (psPL == nullptr)
   {
-    if (this->PointLocator != nullptr && this->OwnsLocator)
+    if (this->PointLocator != nullptr)
     {
-      this->PointLocator->SetDataSet(ps);
-      this->PointLocator->BuildLocator();
+      // only the owner of the locator can change it
+      if (this->OwnsLocator)
+      {
+        this->PointLocator->SetDataSet(ps);
+        this->PointLocator->BuildLocator();
+      }
     }
     else
     {
@@ -109,8 +108,17 @@ int vtkClosestPointStrategy::Initialize(vtkPointSet* ps)
   }
   else
   {
-    this->PointLocator = psPL;
-    this->OwnsLocator = false;
+    if (psPL != this->PointLocator)
+    {
+      this->PointLocator = psPL;
+      this->OwnsLocator = false;
+    }
+    // ensure that the point-set's locator is up-to-date
+    // this should be done only by one thread
+    if (!this->IsACopy)
+    {
+      this->PointLocator->BuildLocator();
+    }
   }
   this->VisitedCells.resize(static_cast<size_t>(ps->GetNumberOfCells()));
   this->Weights.resize(8);
@@ -368,16 +376,26 @@ vtkIdType vtkClosestPointStrategy::FindClosestPointWithinRadius(double x[3], dou
 }
 
 //------------------------------------------------------------------------------
+bool vtkClosestPointStrategy::InsideCellBounds(double x[3], vtkIdType cellId)
+{
+  double bounds[6];
+  this->PointSet->GetCellBounds(cellId, bounds);
+  return bounds[0] <= x[0] && x[0] <= bounds[1] && bounds[2] <= x[1] && x[1] <= bounds[3] &&
+    bounds[4] <= x[2] && x[2] <= bounds[5];
+}
+
+//------------------------------------------------------------------------------
 void vtkClosestPointStrategy::CopyParameters(vtkFindCellStrategy* from)
 {
-
   this->Superclass::CopyParameters(from);
 
-  vtkClosestPointStrategy* strategy = vtkClosestPointStrategy::SafeDownCast(from);
-  if (strategy)
+  if (auto strategy = vtkClosestPointStrategy::SafeDownCast(from))
   {
-    this->PointLocator = strategy->PointLocator;
-    this->OwnsLocator = false;
+    if (strategy->PointLocator)
+    {
+      this->PointLocator = strategy->PointLocator;
+      this->OwnsLocator = false;
+    }
   }
 }
 

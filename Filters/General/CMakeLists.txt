@@ -44,6 +44,7 @@ set(classes
   vtkExtractGhostCells
   vtkExtractSelectedFrustum
   vtkExtractSelectionBase
+  vtkFiniteElementFieldDistributor
   vtkGradientFilter
   vtkGraphLayoutFilter
   vtkGraphToPoints
@@ -70,7 +71,6 @@ set(classes
   vtkMergeTimeFilter
   vtkMergeVectorComponents
   vtkMultiBlockDataGroupFilter
-  vtkMultiBlockFromTimeSeriesFilter
   vtkMultiBlockMergeFilter
   vtkMultiThreshold
   vtkNormalizeMatrixVectors

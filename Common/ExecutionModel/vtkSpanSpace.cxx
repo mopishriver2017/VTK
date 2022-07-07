@@ -541,7 +541,7 @@ void vtkSpanSpace::BuildTree()
   }
   this->SpanSpace = new vtkInternalSpanSpace(this->Resolution, range[0], range[1], numCells);
 
-  // Acclerated span space construction (for unstructured grids).  Templated
+  // Accelerated span space construction (for unstructured grids).  Templated
   // over scalar type; direct access to vtkUnstructuredGrid innards.
   vtkUnstructuredGrid* ugrid = vtkUnstructuredGrid::SafeDownCast(this->DataSet);
   if (ugrid != nullptr)
@@ -636,7 +636,6 @@ vtkIdType vtkSpanSpace::GetNumberOfCellBatches(double scalarValue)
 
   // Find the rectangle in span space that spans the isovalue
   vtkInternalSpanSpace* sp = this->SpanSpace;
-  ;
   sp->GetSpanRectangle(scalarValue, this->RMin, this->RMax);
 
   // Loop over each span row to count total memory allocation required.
@@ -691,7 +690,6 @@ const vtkIdType* vtkSpanSpace::GetCellBatch(vtkIdType batchNum, vtkIdType& numCe
 {
   // Make sure that everything is hunky dory
   vtkInternalSpanSpace* sp = this->SpanSpace;
-  ;
   vtkIdType pos = batchNum * this->BatchSize;
   if (sp->NumCells < 1 || !sp->CandidateCells || pos >= sp->NumCandidates)
   {

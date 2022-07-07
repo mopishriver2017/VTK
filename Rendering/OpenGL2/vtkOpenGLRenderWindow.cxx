@@ -17,9 +17,9 @@
 
 #include "vtkOpenGLHelper.h"
 
-#include <cassert>
-
 #include "vtkFloatArray.h"
+#include "vtkImageData.h"
+#include "vtkJPEGReader.h"
 #include "vtkNew.h"
 #include "vtkObjectFactory.h"
 #include "vtkOpenGLActor.h"
@@ -49,6 +49,7 @@
 #include "vtkTimerLog.h"
 #include "vtkUnsignedCharArray.h"
 
+#include "BlueNoiseTexture64x64.h"
 #include "vtkTextureObjectVS.h" // a pass through shader
 
 #include <sstream>
@@ -382,42 +383,6 @@ vtkOpenGLShaderCache* vtkOpenGLRenderWindow::GetShaderCache()
 vtkOpenGLVertexBufferObjectCache* vtkOpenGLRenderWindow::GetVBOCache()
 {
   return this->GetState()->GetVBOCache();
-}
-
-//------------------------------------------------------------------------------
-unsigned int vtkOpenGLRenderWindow::GetBackLeftBuffer()
-{
-  return 0;
-}
-
-//------------------------------------------------------------------------------
-unsigned int vtkOpenGLRenderWindow::GetBackRightBuffer()
-{
-  return 0;
-}
-
-//------------------------------------------------------------------------------
-unsigned int vtkOpenGLRenderWindow::GetFrontLeftBuffer()
-{
-  return 0;
-}
-
-//------------------------------------------------------------------------------
-unsigned int vtkOpenGLRenderWindow::GetFrontRightBuffer()
-{
-  return 0;
-}
-
-//------------------------------------------------------------------------------
-unsigned int vtkOpenGLRenderWindow::GetBackBuffer()
-{
-  return 0;
-}
-
-//------------------------------------------------------------------------------
-unsigned int vtkOpenGLRenderWindow::GetFrontBuffer()
-{
-  return 0;
 }
 
 //------------------------------------------------------------------------------
@@ -859,7 +824,6 @@ int vtkOpenGLRenderWindow::ReadPixels(
   // Must clear previous errors first.
   while (glGetError() != GL_NO_ERROR)
   {
-    ;
   }
 
   this->GetState()->vtkglDisable(GL_SCISSOR_TEST);
@@ -1437,7 +1401,6 @@ int vtkOpenGLRenderWindow::SetPixelData(
   // Must clear previous errors first.
   while (glGetError() != GL_NO_ERROR)
   {
-    ;
   }
 
   this->GetState()->PushDrawFramebufferBinding();
@@ -1616,7 +1579,6 @@ int vtkOpenGLRenderWindow::SetRGBAPixelData(
   // Must clear previous errors first.
   while (glGetError() != GL_NO_ERROR)
   {
-    ;
   }
 
   this->GetState()->PushDrawFramebufferBinding();
@@ -1799,7 +1761,6 @@ int vtkOpenGLRenderWindow::SetRGBACharPixelData(
   // Must clear previous errors first.
   while (glGetError() != GL_NO_ERROR)
   {
-    ;
   }
 
   this->GetState()->PushDrawFramebufferBinding();
@@ -1881,7 +1842,6 @@ int vtkOpenGLRenderWindow::GetZbufferData(int x1, int y1, int x2, int y2, float*
   // Must clear previous errors first.
   while (glGetError() != GL_NO_ERROR)
   {
-    ;
   }
 
   this->GetState()->vtkglDisable(GL_SCISSOR_TEST);
@@ -2066,7 +2026,7 @@ int vtkOpenGLRenderWindow::CreateFramebuffers(int width, int height)
 #if defined(__APPLE__)
   // make sure requested multisamples is OK with platform
   // APPLE Intel systems seem to have buggy multisampled
-  // frambuffer blits etc that cause issues
+  // framebuffer blits etc that cause issues
   if (this->MultiSamples > 0)
   {
     if (this->GetState()->GetVendor().find("Intel") != std::string::npos)
@@ -2257,7 +2217,7 @@ int vtkOpenGLRenderWindow::SupportsOpenGL()
 
   rw->Delete();
 
-  this->OpenGLSupportMessage += "vtkOutputWindow Text Folows:\n\n" + sow->GetOutput();
+  this->OpenGLSupportMessage += "vtkOutputWindow Text Follows:\n\n" + sow->GetOutput();
   vtkOutputWindow::SetInstance(oldOW);
   oldOW->Delete();
 
@@ -2299,9 +2259,12 @@ int vtkOpenGLRenderWindow::GetNoiseTextureUnit()
 
   if (this->NoiseTextureObject->GetHandle() == 0)
   {
-    vtkNew<vtkPerlinNoise> generator;
-    generator->SetFrequency(64, 64, 1.0);
-    generator->SetAmplitude(0.5);
+    vtkNew<vtkJPEGReader> imgReader;
+
+    imgReader->SetMemoryBuffer(BlueNoiseTexture64x64);
+    imgReader->SetMemoryBufferLength(sizeof(BlueNoiseTexture64x64));
+    imgReader->Update();
+    vtkImageData* textureReader = imgReader->GetOutput();
 
     int const bufferSize = 64 * 64;
     float* noiseTextureData = new float[bufferSize];
@@ -2309,7 +2272,7 @@ int vtkOpenGLRenderWindow::GetNoiseTextureUnit()
     {
       int const x = i % 64;
       int const y = i / 64;
-      noiseTextureData[i] = static_cast<float>(generator->EvaluateFunction(x, y, 0.0) + 0.5);
+      noiseTextureData[i] = textureReader->GetScalarComponentAsFloat(x, y, 0, 0) / 255.0f;
     }
 
     // Prepare texture

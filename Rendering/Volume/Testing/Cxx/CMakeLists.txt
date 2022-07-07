@@ -18,6 +18,7 @@ set (VolumeCxxTests
   TestGPURayCastCompositeMask.cxx
   TestGPURayCastCompositeMaskBlend.cxx
   TestGPURayCastCompositeToMIP.cxx
+  TestGPURayCastComputeNormalFromOpacity.cxx
   TestGPURayCastCropping.cxx
   TestGPURayCastCropping1.cxx
   TestGPURayCastDataTypesMIP.cxx
@@ -77,7 +78,8 @@ set (VolumeCxxTests
   TestGPURayCastVolumeUniformGridBlanking.cxx
   TestGPURayCastVolumeUpdate.cxx
   TestGPUVolumeRayCastMapper.cxx
-  TestGPUVolumeRayCastMapperManyLights.cxx,NO_VALID
+  TestGPUVolumeRayCastMapperManyLights.cxx
+  TestGPURayCastMapperShadows.cxx
   TestMinIntensityRendering.cxx
   TestMultiBlockMapper.cxx
   TestMultiBlockMapperRectilinearGrid.cxx

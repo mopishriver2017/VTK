@@ -37,8 +37,12 @@
  * - Tolerance
  * - RetainCellLists
  *
- * @cite "Fast, Memory-Efficient Cell location in Unstructured Grids for Visualization" by
- * Christoph Garth and Kenneth I. Joy in VisWeek, 2011.
+ * @warning
+ * This class is templated. It may run slower than serial execution if the code
+ * is not optimized during compilation. Build in Release or ReleaseWithDebugInfo.
+ *
+ * From the article: "Fast, Memory-Efficient Cell location in Unstructured Grids for Visualization"
+ * by Christoph Garth and Kenneth I. Joy in VisWeek, 2011.
  *
  * @sa
  * vtkAbstractCellLocator vtkCellLocator vtkStaticCellLocator vtkModifiedBSPTree vtkOBBTree
@@ -50,14 +54,24 @@
 #include "vtkAbstractCellLocator.h"
 #include "vtkCommonDataModelModule.h" // For export macro
 #include "vtkDeprecation.h"           // For VTK_DEPRECATED_IN_9_2_0
-#include <vector>                     // Needed for internal class
 
-class vtkCellPointTraversal;
-class vtkIdTypeArray;
-class vtkCellArray;
+namespace detail
+{
+// Forward declarations for PIMPL
+struct vtkCellTree;
+template <typename T>
+struct CellTree;
+template <typename T>
+struct CellTreeBuilder;
+}
 
 class VTKCOMMONDATAMODEL_EXPORT vtkCellTreeLocator : public vtkAbstractCellLocator
 {
+  template <typename>
+  friend struct detail::CellTree;
+  template <typename>
+  friend struct detail::CellTreeBuilder;
+
 public:
   ///@{
   /**
@@ -68,19 +82,29 @@ public:
   ///@}
 
   /**
-   * Constructor sets the maximum number of cells in a leaf to 8
-   * and number of buckets to 5.  Buckets are used in building the cell tree as described in the
-   * paper
+   * Constructor sets the maximum number of cells in a leaf to 8 and number of buckets to 6.
+   * Buckets are used in building the cell tree as described in the paper.
    */
   static vtkCellTreeLocator* New();
 
   ///@{
   /**
    * Set/Get the number of buckets.
+   *
+   * Default is 6.
    */
   vtkSetMacro(NumberOfBuckets, int);
   vtkGetMacro(NumberOfBuckets, int);
   ///@}
+
+  /**
+   * Inform the user as to whether large ids are being used. This flag only
+   * has meaning after the locator has been built. Large ids are used when the
+   * number of binned points, or the number of bins, is >= the maximum number
+   * of buckets (specified by the user). Note that LargeIds are only available
+   * on 64-bit architectures.
+   */
+  bool GetLargeIds() { return this->LargeIds; }
 
   // Re-use any superclass signatures that we don't override.
   using vtkAbstractCellLocator::FindCell;
@@ -107,8 +131,7 @@ public:
 
   /**
    * Return a list of unique cell ids inside of a given bounding box. The
-   * user must provide the vtkIdList to populate. This method returns data
-   * only after the locator has been built.
+   * user must provide the vtkIdList to populate.
    */
   void FindCellsWithinBounds(double* bbox, vtkIdList* cells) override;
 
@@ -147,63 +170,10 @@ public:
   VTK_DEPRECATED_IN_9_2_0("This method is deprecated because LazyEvaluation has been deprecated")
   virtual void BuildLocatorIfNeeded() {}
 
-  class vtkCellTree;
-  class vtkCellTreeNode;
   /**
-   * Internal classes made public to allow subclasses to create
-   * customized some traversal algorithms
+   * Shallow copy of a vtkCellTreeLocator.
    */
-  class VTKCOMMONDATAMODEL_EXPORT vtkCellTree
-  {
-  public:
-    std::vector<vtkCellTreeNode> Nodes;
-    std::vector<vtkIdType> Leaves;
-    friend class vtkCellPointTraversal;
-    friend class vtkCellTreeNode;
-    friend class vtkCellTreeBuilder;
-
-  public:
-    double DataBBox[6]; // This store the bounding values of the dataset
-  };
-
-  /**
-   * This class is the basic building block of the cell tree.
-   * Nodes consist of two split planes, LeftMax and RightMin,
-   * one which holds all cells assigned to the left, one for the right.
-   * The planes may overlap in the box, but cells are only assigned
-   * to one side, so some searches must traverse both leaves until they have eliminated
-   * candidates.
-   * start is the location in the cell tree. e.g. for root node start is zero.
-   * size is the number of the nodes under the (sub-)tree
-   */
-  class VTKCOMMONDATAMODEL_EXPORT vtkCellTreeNode
-  {
-  public:
-  protected:
-    vtkIdType Index;
-    double LeftMax;  // left max value
-    double RightMin; // right min value
-
-    vtkIdType Sz; // size
-    vtkIdType St; // start
-
-    friend class vtkCellPointTraversal;
-    friend class vtkCellTreeBuilder;
-
-  public:
-    void MakeNode(vtkIdType left, vtkIdType d, double b[2]);
-    void SetChildren(vtkIdType left);
-    bool IsNode() const;
-    vtkIdType GetLeftChildIndex() const;
-    vtkIdType GetRightChildIndex() const;
-    vtkIdType GetDimension() const;
-    const double& GetLeftMaxValue() const;
-    const double& GetRightMinValue() const;
-    void MakeLeaf(vtkIdType start, vtkIdType size);
-    bool IsLeaf() const;
-    vtkIdType Start() const;
-    vtkIdType Size() const;
-  };
+  void ShallowCopy(vtkAbstractCellLocator* locator) override;
 
 protected:
   vtkCellTreeLocator();
@@ -211,19 +181,10 @@ protected:
 
   void BuildLocatorInternal() override;
 
-  int getDominantAxis(const double dir[3]);
-
-  // Order nodes as near/far relative to ray
-  void Classify(const double origin[3], const double dir[3], double& rDist, vtkCellTreeNode*& near,
-    vtkCellTreeNode*& mid, vtkCellTreeNode*& far, int& mustCheck);
-
   int NumberOfBuckets;
+  bool LargeIds = false;
 
-  vtkCellTree* Tree;
-
-  friend class vtkCellPointTraversal;
-  friend class vtkCellTreeNode;
-  friend class vtkCellTreeBuilder;
+  detail::vtkCellTree* Tree;
 
 private:
   vtkCellTreeLocator(const vtkCellTreeLocator&) = delete;

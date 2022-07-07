@@ -174,7 +174,6 @@ void vtkPointSet::BuildPointLocator()
   }
   else if (this->Points->GetMTime() > this->PointLocator->GetMTime())
   {
-    cout << "Building supplied point locator\n";
     this->PointLocator->SetDataSet(this);
   }
 
@@ -200,8 +199,6 @@ void vtkPointSet::BuildCellLocator()
     {
       this->CellLocator = vtkStaticCellLocator::New();
     }
-    this->CellLocator->Register(this);
-    this->CellLocator->Delete();
     this->CellLocator->SetDataSet(this);
   }
   else if (this->Points->GetMTime() > this->CellLocator->GetMTime())

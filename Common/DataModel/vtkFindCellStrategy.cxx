@@ -21,6 +21,8 @@
 vtkFindCellStrategy::vtkFindCellStrategy()
 {
   this->PointSet = nullptr;
+  this->OwnsLocator = false;
+  this->IsACopy = false;
 }
 
 //------------------------------------------------------------------------------
@@ -47,6 +49,8 @@ int vtkFindCellStrategy::Initialize(vtkPointSet* ps)
 void vtkFindCellStrategy::CopyParameters(vtkFindCellStrategy* from)
 {
   this->PointSet = from->PointSet;
+  std::copy_n(from->Bounds, 6, this->Bounds);
+  this->IsACopy = true;
 }
 
 //------------------------------------------------------------------------------

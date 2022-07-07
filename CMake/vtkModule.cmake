@@ -2630,20 +2630,26 @@ function (vtk_module_build)
     _vtk_module_debug(building "@_vtk_build_module@ is being built")
 
     get_filename_component(_vtk_build_module_dir "${_vtk_build_module_file}" DIRECTORY)
+    if (COMMAND cmake_path) # XXX(cmake-3.20)
+      cmake_path(NORMAL_PATH _vtk_build_module_dir)
+    else ()
+      get_filename_component(_vtk_build_module_dir "${_vtk_build_module_dir}" ABSOLUTE)
+    endif ()
     file(RELATIVE_PATH _vtk_build_module_subdir "${CMAKE_SOURCE_DIR}" "${_vtk_build_module_dir}")
+    set(_vtk_build_module_subdir_build "${_vtk_build_module_subdir}")
 
     # Check if the source for this module is outside of `CMAKE_SOURCE_DIR`.
     # Place it under `CMAKE_BINARY_DIR` more meaningfully if so.
-    if (_vtk_build_module_dir MATCHES "\\.\\./")
-      file(RELATIVE_PATH _vtk_build_module_subdir "${CMAKE_BINARY_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
+    if (_vtk_build_module_subdir MATCHES "\\.\\./")
+      file(RELATIVE_PATH _vtk_build_module_subdir_build "${CMAKE_BINARY_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
       get_property(_vtk_build_module_library_name GLOBAL
         PROPERTY "_vtk_module_${_vtk_build_module}_library_name")
-      string(APPEND _vtk_build_module_subdir "/${_vtk_build_module_library_name}")
+      string(APPEND _vtk_build_module_subdir_build "/${_vtk_build_module_library_name}")
     endif ()
 
     add_subdirectory(
       "${CMAKE_SOURCE_DIR}/${_vtk_build_module_subdir}"
-      "${CMAKE_BINARY_DIR}/${_vtk_build_module_subdir}")
+      "${CMAKE_BINARY_DIR}/${_vtk_build_module_subdir_build}")
 
     if (NOT TARGET "${_vtk_build_module}")
       message(FATAL_ERROR
@@ -2660,7 +2666,7 @@ function (vtk_module_build)
         "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/vtk_module_kit_${_vtk_build_target_name}.c")
       file(GENERATE
         OUTPUT  "${_vtk_kit_source_file}"
-        CONTENT "void vtk_module_kit_${_vtk_build_target_name}() {}\n")
+        CONTENT "void vtk_module_kit_${_vtk_build_target_name}(void);\nvoid vtk_module_kit_${_vtk_build_target_name}(void) {}\n")
       add_library("${_vtk_build_target_name}"
         "${_vtk_kit_source_file}")
       get_property(_vtk_build_namespace GLOBAL
@@ -2915,22 +2921,28 @@ function (vtk_module_build)
 
     if (NOT _vtk_build_TEST_DIRECTORY_NAME STREQUAL "NONE")
       get_filename_component(_vtk_build_module_dir "${_vtk_build_module_file}" DIRECTORY)
+      if (COMMAND cmake_path) # XXX(cmake-3.20)
+        cmake_path(NORMAL_PATH _vtk_build_module_dir)
+      else ()
+        get_filename_component(_vtk_build_module_dir "${_vtk_build_module_dir}" ABSOLUTE)
+      endif ()
       file(RELATIVE_PATH _vtk_build_module_subdir "${CMAKE_SOURCE_DIR}" "${_vtk_build_module_dir}")
+      set(_vtk_build_module_subdir_build "${_vtk_build_module_subdir}")
       if (EXISTS "${CMAKE_SOURCE_DIR}/${_vtk_build_module_subdir}/${_vtk_build_TEST_DIRECTORY_NAME}")
         # Check if the source for this module is outside of `CMAKE_SOURCE_DIR`.
         # Place it under `CMAKE_BINARY_DIR` more meaningfully if so.
-        if (_vtk_build_module_dir MATCHES "\\.\\./")
-          file(RELATIVE_PATH _vtk_build_module_subdir "${CMAKE_BINARY_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
+        if (_vtk_build_module_subdir MATCHES "\\.\\./")
+          file(RELATIVE_PATH _vtk_build_module_subdir_build "${CMAKE_BINARY_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
           get_property(_vtk_build_module_library_name GLOBAL
             PROPERTY "_vtk_module_${_vtk_build_test}_library_name")
-          string(APPEND _vtk_build_module_subdir "/${_vtk_build_module_library_name}")
+          string(APPEND _vtk_build_module_subdir_build "/${_vtk_build_module_library_name}")
         endif ()
 
         get_property(_vtk_build_test_labels GLOBAL
           PROPERTY  "_vtk_module_${_vtk_build_test}_test_labels")
         add_subdirectory(
           "${CMAKE_SOURCE_DIR}/${_vtk_build_module_subdir}/${_vtk_build_TEST_DIRECTORY_NAME}"
-          "${CMAKE_BINARY_DIR}/${_vtk_build_module_subdir}/${_vtk_build_TEST_DIRECTORY_NAME}")
+          "${CMAKE_BINARY_DIR}/${_vtk_build_module_subdir_build}/${_vtk_build_TEST_DIRECTORY_NAME}")
       endif ()
     endif ()
   endforeach ()
@@ -4287,7 +4299,7 @@ function (_vtk_module_install target)
     ${ARGN}
     ARCHIVE
       DESTINATION "${_vtk_build_ARCHIVE_DESTINATION}"
-      COMPONENT   "${_vtk_install_headers_component}"
+      COMPONENT   "${_vtk_install_targets_component}"
     LIBRARY
       DESTINATION "${_vtk_build_LIBRARY_DESTINATION}"
       COMPONENT   "${_vtk_install_targets_component}"

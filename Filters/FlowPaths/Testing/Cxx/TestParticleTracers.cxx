@@ -123,7 +123,7 @@ protected:
     double range[2] = { 0, 9 };
     outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), range, 2);
 
-    outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &TimeSteps[0],
+    outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), TimeSteps.data(),
       static_cast<int>(TimeSteps.size()));
 
     outInfo->Set(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT(), this->Extent, 6);
@@ -228,11 +228,14 @@ private:
 vtkStandardNewMacro(TestTimeSource);
 
 #define EXPECT(a, msg)                                                                             \
-  if (!(a))                                                                                        \
+  do                                                                                               \
   {                                                                                                \
-    cerr << "Line " << __LINE__ << ":" << msg << endl;                                             \
-    return EXIT_FAILURE;                                                                           \
-  }
+    if (!(a))                                                                                      \
+    {                                                                                              \
+      cerr << "Line " << __LINE__ << ":" << msg << endl;                                           \
+      return EXIT_FAILURE;                                                                         \
+    }                                                                                              \
+  } while (false)
 
 int TestParticlePathFilter()
 {
@@ -439,7 +442,7 @@ int TestParticleTracers(int, char*[])
 
   pts = vtkPolyData::SafeDownCast(filter->GetOutputDataObject(0))->GetPoints();
   pts->GetPoint(0, p);
-  EXPECT(fabs(p[2] - 0.424) < 0.01, "Wrong termination point")
+  EXPECT(fabs(p[2] - 0.424) < 0.01, "Wrong termination point");
 
   filter->SetTerminationTime(5.5);
   filter->Update();
@@ -471,7 +474,7 @@ int TestParticleTracers(int, char*[])
   filter->SetIgnorePipelineTime(1);
   filter->UpdateTimeStep(6.5);
 
-  EXPECT(imageSource->GetNumRequestData() - numRequestData == 0, "Pipeline Time should be ignored")
+  EXPECT(imageSource->GetNumRequestData() - numRequestData == 0, "Pipeline Time should be ignored");
   numRequestData = imageSource->GetNumRequestData();
 
   filter->SetIgnorePipelineTime(0);

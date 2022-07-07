@@ -23,11 +23,14 @@
 #include "vtkUnstructuredGrid.h"
 
 #define vtk_assert(x)                                                                              \
-  if (!(x))                                                                                        \
+  do                                                                                               \
   {                                                                                                \
-    cerr << "On line " << __LINE__ << " ERROR: Condition FAILED!! : " << #x << endl;               \
-    return EXIT_FAILURE;                                                                           \
-  }
+    if (!(x))                                                                                      \
+    {                                                                                              \
+      cerr << "On line " << __LINE__ << " ERROR: Condition FAILED!! : " << #x << endl;             \
+      return EXIT_FAILURE;                                                                         \
+    }                                                                                              \
+  } while (false)
 
 int TestOutput(vtkMultiBlockDataSet* mb, int nCells, VTKCellType type)
 {
@@ -57,7 +60,7 @@ int TestCGNSReader(int argc, char* argv[])
   std::string mixed = fname ? fname : "";
   delete[] fname;
 
-  cout << "Opening " << mixed.c_str() << endl;
+  cout << "Opening " << mixed << endl;
   vtkNew<vtkCGNSReader> mixedReader;
   mixedReader->SetFileName(mixed.c_str());
   mixedReader->Update();
@@ -73,11 +76,26 @@ int TestCGNSReader(int argc, char* argv[])
   std::string nfacen = fname ? fname : "";
   delete[] fname;
 
-  cout << "Opening " << nfacen.c_str() << endl;
+  cout << "Opening " << nfacen << endl;
   vtkNew<vtkCGNSReader> nfacenReader;
   nfacenReader->SetFileName(nfacen.c_str());
   nfacenReader->Update();
   mb = nfacenReader->GetOutput();
+
+  if (0 != TestOutput(mb, 7, VTK_POLYHEDRON))
+  {
+    return EXIT_FAILURE;
+  }
+
+  fname = vtkTestUtilities::ExpandDataFileName(argc, argv, "Data/Example_ngon_pe.cgns");
+  std::string ngonpe = fname ? fname : "";
+  delete[] fname;
+
+  cout << "Opening " << ngonpe.c_str() << endl;
+  vtkNew<vtkCGNSReader> ngonpeReader;
+  ngonpeReader->SetFileName(ngonpe.c_str());
+  ngonpeReader->Update();
+  mb = ngonpeReader->GetOutput();
 
   if (0 != TestOutput(mb, 7, VTK_POLYHEDRON))
   {

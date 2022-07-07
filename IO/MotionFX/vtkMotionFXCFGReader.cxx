@@ -39,9 +39,11 @@
 // Set to 1 to generate debugging trace if grammar match fails.
 #include "vtkMotionFXCFGGrammar.h" // grammar
 
+#include <cassert>
 #include <cctype>
 #include <fstream>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -172,7 +174,6 @@ protected:
     {
       // s = u*tA + 0.5 * a * (tA)^2
       const double tA = std::min(time - this->tstart_prescribe, this->t_damping);
-      ;
       assert(tA >= 0.0);
       const double tA2 = tA * tA;
       s = s + (init_velocity * tA + acceleration * (tA2 / 2.0));
@@ -362,7 +363,7 @@ struct RotateAxisMotion : public Motion
     if (theta != 0.0)
     {
       // theta is in radians.
-      // convert to degress
+      // convert to degrees
       theta = vtkMath::DegreesFromRadians(theta);
 
       vtkNew<vtkTransform> transform;
@@ -550,7 +551,7 @@ struct PlanetaryMotion : public Motion
       transform->Translate(-this->orbit_cntr[0], -this->orbit_cntr[1], -this->orbit_cntr[2]);
 
       // day_theta is in radians.
-      // convert to degress
+      // convert to degrees
       day_theta = vtkMath::DegreesFromRadians(day_theta);
 
       transform->Translate(this->initial_centerOfDayRotation.GetData());
@@ -1428,7 +1429,7 @@ int vtkMotionFXCFGReader::RequestInformation(
     timesteps.back() = trange[1];
 
     outInfo->Set(
-      vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &timesteps[0], this->TimeResolution);
+      vtkStreamingDemandDrivenPipeline::TIME_STEPS(), timesteps.data(), this->TimeResolution);
     outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), trange.GetData(), 2);
   }
   else

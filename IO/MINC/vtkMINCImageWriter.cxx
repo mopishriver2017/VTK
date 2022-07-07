@@ -213,6 +213,7 @@ int vtkMINCImageWriter::CloseNetCDFFile(int ncid)
 //------------------------------------------------------------------------------
 // this is a macro so the vtkErrorMacro will report a useful line number
 #define vtkMINCImageWriterFailAndClose(ncid, status)                                               \
+  do                                                                                               \
   {                                                                                                \
     if ((status) != NC_NOERR)                                                                      \
     {                                                                                              \
@@ -220,7 +221,7 @@ int vtkMINCImageWriter::CloseNetCDFFile(int ncid)
                                                                << nc_strerror(status));            \
     }                                                                                              \
     nc_close(ncid);                                                                                \
-  }
+  } while (false)
 
 //------------------------------------------------------------------------------
 // Function for getting VTK dimension index from file name.
@@ -492,16 +493,22 @@ nc_type vtkMINCImageWriterConvertVTKTypeToMINCType(int dataType, int& mincsigned
 // text attributes.  As of VTK 7.1, it does not.  The attribute length
 // should be the string length, not the string length "plus one".
 #define vtkMINCImageWriterPutAttributeTextMacro(name, text)                                        \
-  if (status == NC_NOERR)                                                                          \
+  do                                                                                               \
   {                                                                                                \
-    status = nc_put_att_text(ncid, varid, name, strlen(text), text);                               \
-  }
+    if (status == NC_NOERR)                                                                        \
+    {                                                                                              \
+      status = nc_put_att_text(ncid, varid, name, strlen(text), text);                             \
+    }                                                                                              \
+  } while (false)
 
 #define vtkMINCImageWriterPutAttributeDoubleMacro(name, count, ptr)                                \
-  if (status == NC_NOERR)                                                                          \
+  do                                                                                               \
   {                                                                                                \
-    status = nc_put_att_double(ncid, varid, name, NC_DOUBLE, count, ptr);                          \
-  }
+    if (status == NC_NOERR)                                                                        \
+    {                                                                                              \
+      status = nc_put_att_double(ncid, varid, name, NC_DOUBLE, count, ptr);                        \
+    }                                                                                              \
+  } while (false)
 
 //------------------------------------------------------------------------------
 // Allowed dimension variable names
@@ -714,7 +721,7 @@ int vtkMINCImageWriter::CreateMINCVariables(
     int nvars = static_cast<int>(variables.size());
     for (ivar = 0; ivar < nvars; ivar++)
     {
-      if (strcmp(variables[ivar].c_str(), varname) == 0)
+      if (variables[ivar] == varname)
       {
         break;
       }
@@ -1686,7 +1693,7 @@ int vtkMINCImageWriter::WriteMINCData(
   size_t bufferSize = 0;
   switch (fileType)
   {
-    vtkMINCImageWriterTemplateMacro(bufferSize = sizeof(VTK_TT) * chunkSize;);
+    vtkMINCImageWriterTemplateMacro(bufferSize = sizeof(VTK_TT) * chunkSize);
   }
   std::vector<unsigned char> buffer(bufferSize);
 
@@ -2036,7 +2043,9 @@ int vtkMINCImageWriter::RequestInformation(vtkInformation* vtkNotUsed(request),
 
     if (memcmp(inInfo->Get(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT()), extent,
           sizeof(extent)) != 0 ||
+      // NOLINTNEXTLINE(bugprone-suspicious-memory-comparison)
       memcmp(inInfo->Get(vtkDataObject::SPACING()), spacing, sizeof(spacing)) != 0 ||
+      // NOLINTNEXTLINE(bugprone-suspicious-memory-comparison)
       memcmp(inInfo->Get(vtkDataObject::ORIGIN()), origin, sizeof(origin)) != 0 ||
       inInfo->Get(vtkDataObject::FIELD_NUMBER_OF_COMPONENTS()) != components ||
       inInfo->Get(vtkDataObject::FIELD_ARRAY_TYPE()) != dataType)

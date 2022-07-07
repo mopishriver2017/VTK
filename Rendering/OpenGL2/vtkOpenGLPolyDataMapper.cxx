@@ -96,6 +96,7 @@ vtkOpenGLPolyDataMapper::vtkOpenGLPolyDataMapper()
   this->DrawingVertices = false;
   this->ForceTextureCoordinates = false;
   this->SelectionType = VTK_POINTS;
+  this->UseProgramPointSize = false;
 
   this->PrimitiveIDOffset = 0;
   this->ShiftScaleMethod = vtkOpenGLVertexBufferObject::AUTO_SHIFT_SCALE;
@@ -3287,6 +3288,13 @@ void vtkOpenGLPolyDataMapper::RenderPieceStart(vtkRenderer* ren, vtkActor* actor
   vtkOpenGLState* ostate = renWin->GetState();
   ostate->vtkglPointSize(actor->GetProperty()->GetPointSize());
 
+#ifdef GL_PROGRAM_POINT_SIZE
+  if (this->UseProgramPointSize)
+  {
+    ostate->vtkglEnable(GL_PROGRAM_POINT_SIZE);
+  }
+#endif
+
   // timer calls take time, for lots of "small" actors
   // the timer can be a big hit. So we only update
   // once per million cells or every 100 renders
@@ -3434,6 +3442,15 @@ void vtkOpenGLPolyDataMapper::RenderPieceDraw(vtkRenderer* ren, vtkActor* actor)
 //------------------------------------------------------------------------------
 void vtkOpenGLPolyDataMapper::RenderPieceFinish(vtkRenderer* ren, vtkActor*)
 {
+#ifdef GL_PROGRAM_POINT_SIZE
+  if (this->UseProgramPointSize)
+  {
+    vtkOpenGLRenderWindow* renWin = static_cast<vtkOpenGLRenderWindow*>(ren->GetRenderWindow());
+    vtkOpenGLState* ostate = renWin->GetState();
+    ostate->vtkglDisable(GL_PROGRAM_POINT_SIZE);
+  }
+#endif
+
   vtkHardwareSelector* selector = ren->GetSelector();
   // render points for point picking in a special way
   if (selector && selector->GetFieldAssociation() == vtkDataObject::FIELD_ASSOCIATION_POINTS)
@@ -3943,7 +3960,7 @@ void vtkOpenGLPolyDataMapper::BuildIBO(vtkRenderer* ren, vtkActor* act, vtkPolyD
     (prop->GetEdgeVisibility() && prop->GetRepresentation() == VTK_SURFACE);
 
   // do we really need to rebuild the IBO? Since the operation is costly we
-  // construst a string of values that impact the IBO and see if that string has
+  // construct a string of values that impact the IBO and see if that string has
   // changed
 
   // So...polydata can return a dummy CellArray when there are no lines

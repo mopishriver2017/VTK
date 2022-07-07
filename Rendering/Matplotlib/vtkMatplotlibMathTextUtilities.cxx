@@ -57,10 +57,13 @@ vtkMatplotlibMathTextUtilities::Availability vtkMatplotlibMathTextUtilities::MPL
 // is defined in the environment. Use vtkGenericWarningMacro to allow this to
 // work in release mode builds.
 #define vtkMplStartUpDebugMacro(x)                                                                 \
-  if (debug)                                                                                       \
+  do                                                                                               \
   {                                                                                                \
-    vtkGenericWarningMacro(x);                                                                     \
-  }
+    if (debug)                                                                                     \
+    {                                                                                              \
+      vtkGenericWarningMacro(x);                                                                   \
+    }                                                                                              \
+  } while (false)
 
 vtkObjectFactoryNewMacro(vtkMatplotlibMathTextUtilities);
 
@@ -1030,7 +1033,7 @@ bool vtkMatplotlibMathTextUtilities::DrawInteriorLines(
 bool vtkMatplotlibMathTextUtilities::ParseString(
   const char* str, GridOfStrings& strGrid, std::size_t& maxNumberOfCells)
 {
-  // First, change all occurence of escaped pipe ("\|")
+  // First, change all occurrence of escaped pipe ("\|")
   // Into a special character and recover them after splitting
   std::string stdStr = std::string(str);
   this->FindAndReplaceInString(stdStr, "\\|", vtkMatplotlibMathTextUtilities::PipeProtectString);
@@ -1240,7 +1243,7 @@ bool vtkMatplotlibMathTextUtilities::RenderString(
       {
         vtkErrorMacro(<< "Failed to render cell number " << j);
         return false;
-      };
+      }
 
       colStart += cellCols;
     }

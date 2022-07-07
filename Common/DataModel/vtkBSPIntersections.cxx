@@ -31,21 +31,27 @@
 vtkStandardNewMacro(vtkBSPIntersections);
 
 #define REGIONCHECK(err)                                                                           \
-  if (this->BuildRegionList())                                                                     \
+  do                                                                                               \
   {                                                                                                \
-    return err;                                                                                    \
-  }
+    if (this->BuildRegionList())                                                                   \
+    {                                                                                              \
+      return err;                                                                                  \
+    }                                                                                              \
+  } while (false)
 
 #define REGIONIDCHECK_RETURNERR(id, err)                                                           \
-  if (this->BuildRegionList())                                                                     \
+  do                                                                                               \
   {                                                                                                \
-    return err;                                                                                    \
-  }                                                                                                \
-  if (((id) < 0) || ((id) >= this->NumberOfRegions))                                               \
-  {                                                                                                \
-    vtkErrorMacro(<< "Invalid region ID");                                                         \
-    return (err);                                                                                  \
-  }
+    if (this->BuildRegionList())                                                                   \
+    {                                                                                              \
+      return err;                                                                                  \
+    }                                                                                              \
+    if (((id) < 0) || ((id) >= this->NumberOfRegions))                                             \
+    {                                                                                              \
+      vtkErrorMacro(<< "Invalid region ID");                                                       \
+      return (err);                                                                                \
+    }                                                                                              \
+  } while (false)
 
 //------------------------------------------------------------------------------
 
@@ -218,7 +224,7 @@ int vtkBSPIntersections::GetBounds(double* bounds)
 //------------------------------------------------------------------------------
 int vtkBSPIntersections::GetNumberOfRegions()
 {
-  REGIONCHECK(0)
+  REGIONCHECK(0);
 
   return this->NumberOfRegions;
 }
@@ -226,7 +232,7 @@ int vtkBSPIntersections::GetNumberOfRegions()
 //------------------------------------------------------------------------------
 int vtkBSPIntersections::GetRegionBounds(int regionID, double bounds[6])
 {
-  REGIONIDCHECK_RETURNERR(regionID, 1)
+  REGIONIDCHECK_RETURNERR(regionID, 1);
 
   vtkKdNode* node = this->RegionList[regionID];
 
@@ -238,7 +244,7 @@ int vtkBSPIntersections::GetRegionBounds(int regionID, double bounds[6])
 //------------------------------------------------------------------------------
 int vtkBSPIntersections::GetRegionDataBounds(int regionID, double bounds[6])
 {
-  REGIONIDCHECK_RETURNERR(regionID, 1)
+  REGIONIDCHECK_RETURNERR(regionID, 1);
 
   vtkKdNode* node = this->RegionList[regionID];
 
@@ -347,7 +353,7 @@ int vtkBSPIntersections::IntersectsSphere2(
 int vtkBSPIntersections::IntersectsSphere2(
   int* ids, int len, double x, double y, double z, double rSquared)
 {
-  REGIONCHECK(0)
+  REGIONCHECK(0);
 
   int nnodes = 0;
 
@@ -418,7 +424,7 @@ void vtkBSPIntersections::SetCellBounds(vtkCell* cell, double* bounds)
 //------------------------------------------------------------------------------
 int vtkBSPIntersections::IntersectsCell(int* ids, int len, vtkCell* cell, int cellRegion)
 {
-  REGIONCHECK(0)
+  REGIONCHECK(0);
 
   vtkBSPIntersections::SetCellBounds(cell, this->CellBoundsCache);
 

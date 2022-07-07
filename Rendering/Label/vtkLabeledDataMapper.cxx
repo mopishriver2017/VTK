@@ -369,7 +369,7 @@ void vtkLabeledDataMapper::BuildLabelsInternal(vtkDataSet* input)
     case VTK_LABEL_IDS:
     {
       pointIdLabels = 1;
-    };
+    }
     break;
     case VTK_LABEL_SCALARS:
       if (pd->GetScalars())
@@ -417,7 +417,7 @@ void vtkLabeledDataMapper::BuildLabelsInternal(vtkDataSet* input)
       }
       numericData = vtkArrayDownCast<vtkDataArray>(abstractData);
       stringData = vtkArrayDownCast<vtkStringArray>(abstractData);
-    };
+    }
     break;
   }
 
@@ -538,7 +538,7 @@ void vtkLabeledDataMapper::BuildLabelsInternal(vtkDataSet* input)
       FormatString = "BUG - COULDN'T DETECT DATA TYPE";
     }
 
-    vtkDebugMacro(<< "Using default format string " << FormatString.c_str());
+    vtkDebugMacro(<< "Using default format string " << FormatString);
 
   } // Done building default format string
 

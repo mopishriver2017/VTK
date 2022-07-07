@@ -110,7 +110,7 @@ public:
     std::vector<double> allBounds(6 * this->Controller->GetNumberOfProcesses(), 0);
     double nodeBounds[6];
     bounds->GetBounds(nodeBounds);
-    this->Controller->AllGather(nodeBounds, &allBounds[0], 6);
+    this->Controller->AllGather(nodeBounds, allBounds.data(), 6);
     for (int i = 0; i < this->Controller->GetNumberOfProcesses(); i++)
     {
       vtkBoundingBox box;
@@ -296,7 +296,7 @@ public:
         {
           *this->ReceiveStream >> xi[j];
         }
-        array->InsertNextTuple(&xi[0]);
+        array->InsertNextTuple(xi.data());
       }
       return true;
     }
@@ -435,7 +435,7 @@ public:
 private:
   vtkMPIController* Controller;
   int StreamSize;
-  int ReceivedCounter; // Total number of particlesIds recieved
+  int ReceivedCounter; // Total number of particlesIds received
   MessageStream* ReceiveStream;
   ParticleIdManager(const ParticleIdManager&) {}
   std::vector<std::pair<vtkMPICommunicator::Request*, MessageStream*>> SendRequests;
@@ -444,11 +444,11 @@ private:
 // a class used to manage the feed of particles using GetGlobalStatus(status) function
 //  input a local partition 'status' and outputs the globalStatus
 //  status = 0 - INACTIVE - particle queue is empty and all sent particles have been confirmed as
-//  being recieved status = 1 - ACTIVE - either the particle queue has particles or we are waiting
+//  being received status = 1 - ACTIVE - either the particle queue has particles or we are waiting
 //  on confirmation of pariticles
-//               being recieved.
+//               being received.
 //  - each rank updates master when its status changes
-//  globalStatus is 0 when all paritition are INACTIVE and 1 if at least one partition is ACTIVE.
+//  globalStatus is 0 when all partitions are INACTIVE and 1 if at least one partition is ACTIVE.
 class ParticleFeedManager
 {
 public:
@@ -657,7 +657,7 @@ void vtkPLagrangianParticleTracker::GenerateParticles(const vtkBoundingBox* boun
       // seeds pointData.
       // Recover this information from another rank.
       this->Controller->AllReduce(&dummyRank, &fullArrayRank, 1, vtkCommunicator::MAX_OP);
-      int source, size;
+      int source = 0, size = 0;
       char type;
       int probe = false;
       while (!probe)
@@ -683,7 +683,7 @@ void vtkPLagrangianParticleTracker::GenerateParticles(const vtkBoundingBox* boun
         {
           stream >> name[l];
         }
-        array->SetName(&name[0]);
+        array->SetName(name.data());
         for (int idComp = 0; idComp < nComponents; idComp++)
         {
           stream >> compNameLen;
@@ -694,7 +694,7 @@ void vtkPLagrangianParticleTracker::GenerateParticles(const vtkBoundingBox* boun
             {
               stream >> compName[compLength];
             }
-            array->SetComponentName(idComp, &compName[0]);
+            array->SetComponentName(idComp, compName.data());
           }
         }
         seedData->AddArray(array);
@@ -776,7 +776,7 @@ void vtkPLagrangianParticleTracker::GenerateParticles(const vtkBoundingBox* boun
       {
         // Other ranks containing correct number of arrays, check metadata is correct
         char type;
-        int source, size;
+        int source = 0, size = 0;
         int probe = false;
         while (!probe)
         {
@@ -810,7 +810,7 @@ void vtkPLagrangianParticleTracker::GenerateParticles(const vtkBoundingBox* boun
           {
             stream >> name[l];
           }
-          if (strcmp(&name[0], localName) != 0)
+          if (strcmp(name.data(), localName) != 0)
           {
             vtkErrorMacro("Incoherent array names between nodes, "
                           "results may be invalid");
@@ -824,7 +824,7 @@ void vtkPLagrangianParticleTracker::GenerateParticles(const vtkBoundingBox* boun
             {
               stream >> compName[compLength];
             }
-            if (localCompName && strcmp(&compName[0], localCompName) != 0)
+            if (localCompName && strcmp(compName.data(), localCompName) != 0)
             {
               vtkErrorMacro("Incoherent array component names between nodes, "
                             "results may be invalid");
@@ -883,7 +883,7 @@ void vtkPLagrangianParticleTracker::GetParticleFeed(
     return;
   }
 
-  // local parition status 0 = parition inactive,  1 = active
+  // local partition status 0 = partition inactive,  1 = active
   int status;
 
   do

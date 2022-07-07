@@ -208,14 +208,13 @@ void vtkDynamic2DLabelMapper::RenderOpaqueGeometry(vtkViewport* viewport, vtkAct
         }
         numericData = vtkArrayDownCast<vtkDataArray>(abstractData);
         stringData = vtkArrayDownCast<vtkStringArray>(abstractData);
-      };
+      }
       break;
     }
 
     // determine number of components and check input
     if (pointIdLabels)
     {
-      ;
     }
     else if (numericData)
     {
@@ -322,7 +321,7 @@ void vtkDynamic2DLabelMapper::RenderOpaqueGeometry(vtkViewport* viewport, vtkAct
         FormatString = "BUG - COULDN'T DETECT DATA TYPE";
       }
 
-      vtkDebugMacro(<< "Using default format string " << FormatString.c_str());
+      vtkDebugMacro(<< "Using default format string " << FormatString);
     } // Done building default format string
 
     this->NumberOfLabels = dsInput ? dsInput->GetNumberOfPoints() : gInput->GetNumberOfVertices();

@@ -16,7 +16,6 @@ vtk_add_test_python(
   TestGraphLayoutFilter.py
   TestGroupTimeStepsFilter.py
   TestMarchingCubes.py
-  TestMultiBlockFromTimeSeries.py
   TestPointConnectivityFilter.py
   TestRemoveGhostCells.py,NO_OUTPUT,NO_VALID
   TestRemovePolyData.py
@@ -29,6 +28,7 @@ vtk_add_test_python(
   TestStaticCellLocator.py
   TestStaticCellLocatorPlaneIntersection.py
   TestSynchronizeTimeFilter.py,NO_OUTPUT,NO_VALID
+  TestTriangulateContours.py
   TestWarpScalar.py,NO_VALID
   TestWarpVector.py,NO_VALID
   WarpToImage.py

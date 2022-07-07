@@ -99,6 +99,8 @@ set(classes
   vtkHyperTree
   vtkHyperTreeCursor
   vtkHyperTreeGrid
+  vtkHyperTreeGridLocator
+  vtkHyperTreeGridGeometricLocator
   vtkHyperTreeGridNonOrientedCursor
   vtkHyperTreeGridNonOrientedGeometryCursor
   vtkHyperTreeGridNonOrientedMooreSuperCursor
@@ -140,6 +142,7 @@ set(classes
   vtkLine
   vtkLocator
   vtkMarchingCubesTriangleCases
+  vtkMarchingCubesPolygonCases
   vtkMarchingSquaresLineCases
   vtkMeanValueCoordinatesInterpolator
   vtkMergePoints
